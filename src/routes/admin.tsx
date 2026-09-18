@@ -36,6 +36,25 @@ export const Route = createFileRoute("/admin")({
 });
 
 function Page() {
+  const [redirecting, setRedirecting] = useState(false);
+
+  useEffect(() => {
+    const url = externalAdminUrl(window.location.pathname + window.location.search);
+    if (!url) return;
+    setRedirecting(true);
+    window.location.replace(url);
+  }, []);
+
+  if (redirecting) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-canvas px-6">
+        <p className="text-center text-sm text-muted-foreground">
+          جارٍ تحويلك إلى فضاء الإدارة…
+        </p>
+      </div>
+    );
+  }
+
   return (
     <SpaceAuth space="admin">
       {({ session, profile, client, signOut }) => (
@@ -49,6 +68,7 @@ function Page() {
     </SpaceAuth>
   );
 }
+
 
 function AdminDashboard({
   name,
