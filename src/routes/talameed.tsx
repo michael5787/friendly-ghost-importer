@@ -27,7 +27,7 @@ export const Route = createFileRoute("/talameed")({
   component: Page,
 });
 
-type Tab = "resources" | "agenda" | "answers" | "notifications" | "account";
+type Tab = "resources" | "agenda" | "questions" | "answers" | "notifications" | "account";
 
 function Page() {
   return (
@@ -73,6 +73,7 @@ function StudentShell({
   const tabs: { key: Tab; label: string; badge?: number }[] = [
     { key: "resources", label: "الدروس والتمارين" },
     { key: "agenda", label: "المفكرة" },
+    { key: "questions", label: "الأسئلة والأجوبة" },
     { key: "answers", label: "أجوبتي" },
     { key: "notifications", label: "الإشعارات", badge: notifications.unread },
     { key: "account", label: "حسابي" },
