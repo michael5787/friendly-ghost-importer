@@ -323,7 +323,7 @@ function QuestionCard({
         actorId: userId,
         kind: "question_answer",
         title: `رد جديد من ${userName} على سؤال «${item.title}»`,
-        body: body.trim() || undefined,
+        ...(body.trim() ? { body: body.trim() } : {}),
       });
     }
 
