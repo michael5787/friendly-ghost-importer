@@ -5,6 +5,7 @@ import { SpaceAuth, Wordmark } from "@/components/SpaceAuth";
 import { StudentResources } from "@/components/resources/StudentResources";
 import { StudentSubmissions } from "@/components/resources/StudentSubmissions";
 import { StudentAgenda } from "@/components/agenda/StudentAgenda";
+import { QuestionsSpace } from "@/components/questions/QuestionsSpace";
 import { NotificationsPanel } from "@/components/NotificationsPanel";
 import { useNotifications } from "@/components/resources/useSubmissions";
 import { STATUS_LABEL } from "@/lib/spaces";
