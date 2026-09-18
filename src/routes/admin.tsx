@@ -8,6 +8,8 @@ import { ClassesPanel } from "@/components/admin/ClassesPanel";
 import { UsersPanel } from "@/components/admin/UsersPanel";
 import type { Database } from "@/integrations/supabase/types";
 import { SPACE_LABEL, STATUS_LABEL, type SpaceKey } from "@/lib/spaces";
+import { externalAdminUrl } from "@/lib/admin-host";
+
 
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 type Tab = "accounts" | "users" | "levels" | "classes";
