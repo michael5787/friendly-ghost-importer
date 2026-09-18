@@ -130,6 +130,14 @@ function TeacherShell({
           <TeacherResources client={client} teacherId={userId} />
         ) : tab === "agenda" ? (
           <TeacherAgenda client={client} teacherId={userId} classes={classes} />
+        ) : tab === "questions" ? (
+          <QuestionsSpace
+            client={client}
+            userId={userId}
+            userName={name}
+            role="teacher"
+            classes={classes}
+          />
         ) : tab === "answers" ? (
           <TeacherSubmissions client={client} teacherId={userId} classes={classes} />
         ) : tab === "notifications" ? (

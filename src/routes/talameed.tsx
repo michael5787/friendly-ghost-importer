@@ -121,6 +121,14 @@ function StudentShell({
           />
         ) : tab === "agenda" ? (
           <StudentAgenda client={client} classId={classId} studentId={userId} />
+        ) : tab === "questions" ? (
+          <QuestionsSpace
+            client={client}
+            userId={userId}
+            userName={name}
+            role="student"
+            classId={classId}
+          />
         ) : tab === "answers" ? (
           <StudentSubmissions client={client} studentId={userId} />
         ) : tab === "notifications" ? (
