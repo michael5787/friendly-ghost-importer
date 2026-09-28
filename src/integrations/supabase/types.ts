@@ -571,6 +571,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      shares_class: {
+        Args: { _target: string; _viewer: string }
+        Returns: boolean
+      }
       teaches_student: {
         Args: { _student_id: string; _teacher_id: string }
         Returns: boolean
