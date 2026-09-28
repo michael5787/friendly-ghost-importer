@@ -154,13 +154,9 @@ export function ClassStudents({
                       </div>
                     </div>
                     <span
-                      className="rounded-full px-3 py-1 text-xs font-semibold"
-                      data-status={s.status}
-                      style={
-                        s.status === "approved"
-                          ? undefined
-                          : { background: "var(--muted)", color: "var(--muted-foreground)" }
-                      }
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                        s.status === "approved" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
+                      }`}
                     >
                       {STATUS_LABEL[s.status] ?? s.status}
                     </span>

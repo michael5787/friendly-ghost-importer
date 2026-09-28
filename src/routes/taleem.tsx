@@ -8,6 +8,7 @@ import { TeacherResources } from "@/components/resources/TeacherResources";
 import { TeacherSubmissions } from "@/components/resources/TeacherSubmissions";
 import { TeacherAgenda } from "@/components/agenda/TeacherAgenda";
 import { QuestionsSpace } from "@/components/questions/QuestionsSpace";
+import { ClassStudents } from "@/components/students/ClassStudents";
 import { NotificationsPanel } from "@/components/NotificationsPanel";
 import { useNotifications } from "@/components/resources/useSubmissions";
 import { STATUS_LABEL } from "@/lib/spaces";
