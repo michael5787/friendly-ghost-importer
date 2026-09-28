@@ -16,23 +16,21 @@ function displayName(p?: { full_name: string | null; email: string }) {
   return p?.full_name?.trim() || p?.email?.split("@")[0] || "مستخدم";
 }
 
-export function useQuestions(client: Client, classId: string | null) {
+export function useQuestions(client: Client, classId: string | null, allClasses = false) {
   const [items, setItems] = useState<QuestionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!classId) {
+    if (!classId && !allClasses) {
       setItems([]);
       setLoading(false);
       return;
     }
     setLoading(true);
-    const { data, error: err } = await client
-      .from("questions")
-      .select("*")
-      .eq("class_id", classId)
-      .order("created_at", { ascending: false });
+    let q = client.from("questions").select("*");
+    if (classId) q = q.eq("class_id", classId);
+    const { data, error: err } = await q.order("created_at", { ascending: false });
 
     if (err) {
       setError("تعذّر تحميل الأسئلة.");
@@ -78,7 +76,7 @@ export function useQuestions(client: Client, classId: string | null) {
       })),
     );
     setLoading(false);
-  }, [client, classId]);
+  }, [client, classId, allClasses]);
 
   useEffect(() => {
     void load();
