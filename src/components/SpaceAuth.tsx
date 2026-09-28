@@ -16,6 +16,7 @@ interface Props {
     profile: ProfileRow;
     client: SupabaseClient<Database>;
     signOut: () => Promise<void>;
+    isAdmin: boolean;
   }) => ReactNode;
 }
 
@@ -133,7 +134,7 @@ export function SpaceAuth({ space, children }: Props) {
   const spaceAllowed = !!profile && (isAdmin || profile.space === space);
 
   if (session && profile && profile.status === "approved" && spaceAllowed) {
-    return <>{children({ session, profile, client, signOut })}</>;
+    return <>{children({ session, profile, client, signOut, isAdmin })}</>;
   }
 
   if (session && profile && profile.status === "approved" && !spaceAllowed) {

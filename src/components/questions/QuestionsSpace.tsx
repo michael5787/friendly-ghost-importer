@@ -23,20 +23,23 @@ export function QuestionsSpace(props: {
   role: "student" | "teacher";
   classId?: string | null;
   classes?: ClassRow[];
+  isAdmin?: boolean;
 }) {
   const { client, userId, userName, role } = props;
+  const isAdmin = !!props.isAdmin && role === "teacher";
   const [selected, setSelected] = useState<string | null>(
-    role === "student" ? props.classId ?? null : props.classes?.[0]?.id ?? null,
+    role === "student" ? props.classId ?? null : props.isAdmin ? null : props.classes?.[0]?.id ?? null,
   );
 
   useEffect(() => {
-    if (role === "teacher" && !selected && props.classes?.length) {
+    if (role === "teacher" && !isAdmin && !selected && props.classes?.length) {
       setSelected(props.classes[0]!.id);
     }
-  }, [role, selected, props.classes]);
+  }, [role, isAdmin, selected, props.classes]);
 
   const classId = role === "student" ? props.classId ?? null : selected;
-  const { items, loading, error, setError, reload } = useQuestions(client, classId);
+  const { items, loading, error, setError, reload } = useQuestions(client, classId, isAdmin);
+  const className = (id: string) => props.classes?.find((c) => c.id === id)?.name ?? "";
 
   return (
     <section className="text-start">
@@ -62,7 +65,8 @@ export function QuestionsSpace(props: {
             onChange={(e) => setSelected(e.target.value || null)}
             aria-label="اختيار القسم"
           >
-            {(props.classes ?? []).length === 0 ? <option value="">لا توجد أقسام</option> : null}
+            {isAdmin ? <option value="">كل الأقسام</option> : null}
+            {!isAdmin && (props.classes ?? []).length === 0 ? <option value="">لا توجد أقسام</option> : null}
             {(props.classes ?? []).map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -106,6 +110,8 @@ export function QuestionsSpace(props: {
               client={client}
               item={q}
               role={role}
+              isAdmin={isAdmin}
+              className={className(q.class_id)}
               userId={userId}
               userName={userName}
               onError={setError}
@@ -260,6 +266,8 @@ function QuestionCard({
   client,
   item,
   role,
+  isAdmin,
+  className,
   userId,
   userName,
   onError,
@@ -268,6 +276,8 @@ function QuestionCard({
   client: Client;
   item: QuestionItem;
   role: "student" | "teacher";
+  isAdmin: boolean;
+  className: string;
   userId: string;
   userName: string;
   onError: (msg: string | null) => void;
@@ -334,13 +344,26 @@ function QuestionCard({
   };
 
   const removeQuestion = async () => {
-    if (!window.confirm(`حذف سؤالك «${item.title}»؟`)) return;
+    if (!window.confirm(`حذف السؤال «${item.title}» وكل أجوبته؟`)) return;
+    const answerFiles = item.answers.map((a) => a.file_path).filter((p): p is string => !!p);
     const { error } = await client.from("questions").delete().eq("id", item.id);
     if (error) {
       onError("تعذّر الحذف.");
       return;
     }
-    if (item.file_path) await client.storage.from("questions").remove([item.file_path]);
+    const files = [...answerFiles, ...(item.file_path ? [item.file_path] : [])];
+    if (files.length) await client.storage.from("questions").remove(files);
+    await onChanged();
+  };
+
+  const removeAnswer = async (a: QuestionItem["answers"][number]) => {
+    if (!window.confirm("حذف هذا الرد؟")) return;
+    const { error } = await client.from("question_answers").delete().eq("id", a.id);
+    if (error) {
+      onError("تعذّر الحذف.");
+      return;
+    }
+    if (a.file_path) await client.storage.from("questions").remove([a.file_path]);
     await onChanged();
   };
 
@@ -351,9 +374,10 @@ function QuestionCard({
           <div className="text-sm font-semibold text-foreground">{item.title}</div>
           <div className="mt-1 text-xs text-muted-foreground">
             {item.student_name} • {formatDate(item.created_at)}
+            {isAdmin && className ? ` • ${className}` : ""}
           </div>
         </div>
-        {role === "student" && item.student_id === userId ? (
+        {(role === "student" && item.student_id === userId) || isAdmin ? (
           <button type="button" className="btn-text" onClick={removeQuestion}>
             حذف
           </button>
@@ -368,8 +392,15 @@ function QuestionCard({
           <p className="text-xs font-semibold text-primary">أجوبة الأساتذة</p>
           {item.answers.map((a) => (
             <div key={a.id} className="rounded-lg bg-card/70 p-3">
-              <div className="text-xs text-muted-foreground">
-                {a.teacher_name} • {formatDate(a.created_at)}
+              <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                <span>
+                  {a.teacher_name} • {formatDate(a.created_at)}
+                </span>
+                {isAdmin || a.teacher_id === userId ? (
+                  <button type="button" className="btn-text" onClick={() => void removeAnswer(a)}>
+                    حذف
+                  </button>
+                ) : null}
               </div>
               {a.body ? <p className="mt-1 text-sm text-foreground">{a.body}</p> : null}
               <FileChip client={client} row={a} onError={onError} />

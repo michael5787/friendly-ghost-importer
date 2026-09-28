@@ -33,7 +33,7 @@ type ClassRow = Database["public"]["Tables"]["classes"]["Row"];
 function Page() {
   return (
     <SpaceAuth space="taleem">
-      {({ session, profile, client, signOut }) => (
+      {({ session, profile, client, signOut, isAdmin }) => (
         <TeacherShell
           client={client}
           userId={session.user.id}
@@ -41,6 +41,7 @@ function Page() {
           name={profile.full_name?.trim() || session.user.email?.split("@")[0] || "أستاذ(ة)"}
           status={profile.status}
           signOut={signOut}
+          isAdmin={isAdmin}
         />
       )}
     </SpaceAuth>
@@ -54,6 +55,7 @@ function TeacherShell({
   name,
   status,
   signOut,
+  isAdmin,
 }: {
   client: SupabaseClient<Database>;
   userId: string;
@@ -61,6 +63,7 @@ function TeacherShell({
   name: string;
   status: string;
   signOut: () => Promise<void>;
+  isAdmin: boolean;
 }) {
   const [tab, setTab] = useState<Tab>("resources");
   const [classes, setClasses] = useState<ClassRow[]>([]);
@@ -69,6 +72,11 @@ function TeacherShell({
   useEffect(() => {
     let active = true;
     (async () => {
+      if (isAdmin) {
+        const { data } = await client.from("classes").select("*").order("name");
+        if (active) setClasses(data ?? []);
+        return;
+      }
       const { data: links } = await client
         .from("teacher_classes")
         .select("class_id")
@@ -84,7 +92,7 @@ function TeacherShell({
     return () => {
       active = false;
     };
-  }, [client, userId]);
+  }, [client, userId, isAdmin]);
 
   const tabs: { key: Tab; label: string; badge?: number }[] = [
     { key: "resources", label: "الدروس والتمارين" },
@@ -136,6 +144,7 @@ function TeacherShell({
             userId={userId}
             userName={name}
             role="teacher"
+            isAdmin={isAdmin}
             classes={classes}
           />
         ) : tab === "answers" ? (
