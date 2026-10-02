@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Hide administration links from navigation and page footers while keeping /admin directly accessible
 - [x] Recreate agenda module from friendly-ghost-importer (useAgenda, agendaShared, AgendaCalendar, StudentAgenda, TeacherAgenda + deps)
 - [x] Add useFirstPendingDay: auto-jump once to first eligible future homework date before manual navigation
 - [x] Student: pending = future homework whose resource_id has no submission by student; Teacher: first future homework date
