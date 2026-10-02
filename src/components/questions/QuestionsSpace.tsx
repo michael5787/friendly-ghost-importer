@@ -5,7 +5,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { Butterfly } from "@/components/Butterfly";
 import { checkSubmissionFile, SUBMISSION_ACCEPT } from "@/lib/safeFile";
 import { formatDate, notify } from "@/components/resources/useSubmissions";
-import { formatSize } from "@/components/resources/useResources";
+import { formatSize, useChapters } from "@/components/resources/useResources";
 import {
   openQuestionFile,
   uploadQuestionFile,
@@ -40,6 +40,9 @@ export function QuestionsSpace(props: {
   const classId = role === "student" ? props.classId ?? null : selected;
   const { items, loading, error, setError, reload } = useQuestions(client, classId, isAdmin);
   const className = (id: string) => props.classes?.find((c) => c.id === id)?.name ?? "";
+  const allChapters = useChapters(client);
+  const chapterName = (id: string | null) =>
+    (id && allChapters.find((c) => c.id === id)?.name) || "آخر";
 
   return (
     <section className="text-start">
@@ -112,6 +115,7 @@ export function QuestionsSpace(props: {
               role={role}
               isAdmin={isAdmin}
               className={className(q.class_id)}
+              chapterName={chapterName(q.chapter_id)}
               userId={userId}
               userName={userName}
               onError={setError}
@@ -143,8 +147,30 @@ function AskForm({
   const [body, setBody] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  const [levelId, setLevelId] = useState<string | null>(null);
+  const [chapterId, setChapterId] = useState("");
+  const chapters = useChapters(client, levelId);
+
+  useEffect(() => {
+    let active = true;
+    void client
+      .from("classes")
+      .select("level_id")
+      .eq("id", classId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (active) setLevelId(data?.level_id ?? null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [client, classId]);
 
   const submit = async () => {
+    if (chapterId === "") {
+      onError("اختر محور السؤال أو «آخر».");
+      return;
+    }
     if (title.trim() === "") {
       onError("اكتب عنوان السؤال.");
       return;
@@ -171,7 +197,7 @@ function AskForm({
 
     const { error } = await client
       .from("questions")
-      .insert({ class_id: classId, student_id: studentId, title: title.trim(), body: body.trim() || null, ...meta });
+      .insert({ class_id: classId, student_id: studentId, title: title.trim(), body: body.trim() || null, chapter_id: chapterId === "other" ? null : chapterId, ...meta });
 
     if (error) {
       onError(`تعذّر إرسال السؤال: ${error.message}`);
@@ -193,6 +219,7 @@ function AskForm({
     setTitle("");
     setBody("");
     setFile(null);
+    setChapterId("");
     setBusy(false);
     await onDone();
   };
@@ -203,6 +230,18 @@ function AskForm({
         <MessageCircleQuestion size={18} />
         اطرح سؤالاً
       </div>
+      <select
+        className="field-input mt-3 w-full text-sm"
+        value={chapterId}
+        onChange={(e) => setChapterId(e.target.value)}
+        aria-label="محور السؤال"
+      >
+        <option value="" disabled>اختر المحور…</option>
+        {chapters.map((c) => (
+          <option key={c.id} value={c.id}>{c.name}</option>
+        ))}
+        <option value="other">آخر</option>
+      </select>
       <input
         className="field-input mt-3 w-full text-sm"
         placeholder="عنوان السؤال…"
@@ -268,6 +307,7 @@ function QuestionCard({
   role,
   isAdmin,
   className,
+  chapterName,
   userId,
   userName,
   onError,
@@ -278,6 +318,7 @@ function QuestionCard({
   role: "student" | "teacher";
   isAdmin: boolean;
   className: string;
+  chapterName: string;
   userId: string;
   userName: string;
   onError: (msg: string | null) => void;
@@ -373,7 +414,7 @@ function QuestionCard({
         <div>
           <div className="text-sm font-semibold text-foreground">{item.title}</div>
           <div className="mt-1 text-xs text-muted-foreground">
-            {item.student_name} • {formatDate(item.created_at)}
+            {item.student_name} • {formatDate(item.created_at)} • {chapterName}
             {isAdmin && className ? ` • ${className}` : ""}
           </div>
         </div>
