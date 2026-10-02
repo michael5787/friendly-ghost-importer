@@ -5,7 +5,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { Butterfly } from "@/components/Butterfly";
 import { checkSubmissionFile, SUBMISSION_ACCEPT } from "@/lib/safeFile";
 import { formatDate, notify } from "@/components/resources/useSubmissions";
-import { formatSize } from "@/components/resources/useResources";
+import { formatSize, useChapters } from "@/components/resources/useResources";
 import {
   openQuestionFile,
   uploadQuestionFile,
@@ -40,6 +40,9 @@ export function QuestionsSpace(props: {
   const classId = role === "student" ? props.classId ?? null : selected;
   const { items, loading, error, setError, reload } = useQuestions(client, classId, isAdmin);
   const className = (id: string) => props.classes?.find((c) => c.id === id)?.name ?? "";
+  const allChapters = useChapters(client);
+  const chapterName = (id: string | null) =>
+    (id && allChapters.find((c) => c.id === id)?.name) || "آخر";
 
   return (
     <section className="text-start">
@@ -112,6 +115,7 @@ export function QuestionsSpace(props: {
               role={role}
               isAdmin={isAdmin}
               className={className(q.class_id)}
+              chapterName={chapterName(q.chapter_id)}
               userId={userId}
               userName={userName}
               onError={setError}
@@ -303,6 +307,7 @@ function QuestionCard({
   role,
   isAdmin,
   className,
+  chapterName,
   userId,
   userName,
   onError,
@@ -313,6 +318,7 @@ function QuestionCard({
   role: "student" | "teacher";
   isAdmin: boolean;
   className: string;
+  chapterName: string;
   userId: string;
   userName: string;
   onError: (msg: string | null) => void;
@@ -408,7 +414,7 @@ function QuestionCard({
         <div>
           <div className="text-sm font-semibold text-foreground">{item.title}</div>
           <div className="mt-1 text-xs text-muted-foreground">
-            {item.student_name} • {formatDate(item.created_at)} • {chapterLabel(item.chapter_id)}
+            {item.student_name} • {formatDate(item.created_at)} • {chapterName}
             {isAdmin && className ? ` • ${className}` : ""}
           </div>
         </div>
