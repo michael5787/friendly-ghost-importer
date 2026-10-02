@@ -143,8 +143,30 @@ function AskForm({
   const [body, setBody] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  const [levelId, setLevelId] = useState<string | null>(null);
+  const [chapterId, setChapterId] = useState("");
+  const chapters = useChapters(client, levelId);
+
+  useEffect(() => {
+    let active = true;
+    void client
+      .from("classes")
+      .select("level_id")
+      .eq("id", classId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (active) setLevelId(data?.level_id ?? null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [client, classId]);
 
   const submit = async () => {
+    if (chapterId === "") {
+      onError("اختر محور السؤال أو «آخر».");
+      return;
+    }
     if (title.trim() === "") {
       onError("اكتب عنوان السؤال.");
       return;
@@ -171,7 +193,7 @@ function AskForm({
 
     const { error } = await client
       .from("questions")
-      .insert({ class_id: classId, student_id: studentId, title: title.trim(), body: body.trim() || null, ...meta });
+      .insert({ class_id: classId, student_id: studentId, title: title.trim(), body: body.trim() || null, chapter_id: chapterId === "other" ? null : chapterId, ...meta });
 
     if (error) {
       onError(`تعذّر إرسال السؤال: ${error.message}`);
@@ -193,6 +215,7 @@ function AskForm({
     setTitle("");
     setBody("");
     setFile(null);
+    setChapterId("");
     setBusy(false);
     await onDone();
   };
@@ -203,6 +226,18 @@ function AskForm({
         <MessageCircleQuestion size={18} />
         اطرح سؤالاً
       </div>
+      <select
+        className="field-input mt-3 w-full text-sm"
+        value={chapterId}
+        onChange={(e) => setChapterId(e.target.value)}
+        aria-label="محور السؤال"
+      >
+        <option value="" disabled>اختر المحور…</option>
+        {chapters.map((c) => (
+          <option key={c.id} value={c.id}>{c.name}</option>
+        ))}
+        <option value="other">آخر</option>
+      </select>
       <input
         className="field-input mt-3 w-full text-sm"
         placeholder="عنوان السؤال…"
@@ -373,7 +408,7 @@ function QuestionCard({
         <div>
           <div className="text-sm font-semibold text-foreground">{item.title}</div>
           <div className="mt-1 text-xs text-muted-foreground">
-            {item.student_name} • {formatDate(item.created_at)}
+            {item.student_name} • {formatDate(item.created_at)} • {chapterLabel(item.chapter_id)}
             {isAdmin && className ? ` • ${className}` : ""}
           </div>
         </div>
