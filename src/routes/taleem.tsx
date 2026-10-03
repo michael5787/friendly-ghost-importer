@@ -156,7 +156,7 @@ function TeacherShell({
         ) : tab === "answers" ? (
           <TeacherSubmissions client={client} teacherId={userId} classes={classes} />
         ) : tab === "students" ? (
-          <ClassStudents client={client} classes={classes} isAdmin={isAdmin} teacherId={userId} />es} isAdmin={isAdmin} />
+         <ClassStudents client={client} classes={classes} isAdmin={isAdmin} teacherId={userId} />
         ) : tab === "notifications" ? (
           <NotificationsPanel
             rows={notifications.rows}
