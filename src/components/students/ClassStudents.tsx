@@ -63,7 +63,7 @@ export function ClassStudents({
   const className = (id: string | null) => classes.find((c) => c.id === id)?.name ?? null;
 
   const groups = useMemo(() => {
-    if (isAdmin && !selected) {
+    if (!selected) {
       const byClass = new Map<string, StudentRow[]>();
       for (const s of students) {
         const key = s.class_id ?? "";
@@ -74,10 +74,9 @@ export function ClassStudents({
         .map(([cid, rows]) => ({ label: className(cid) || "غير معيّن إلى قسم", rows }))
         .sort((a, b) => a.label.localeCompare(b.label, "ar"));
     }
-    const label = selected ? (className(selected) ?? "") : "";
-    return [{ label, rows: students }];
+    return [{ label: className(selected) ?? "", rows: students }];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [students, isAdmin, selected, classes]);
+  }, [students, selected, classes]);
 
   return (
     <section className="text-start">
