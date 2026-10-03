@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { UserRound } from "lucide-react";
 import { SpaceAuth, Wordmark } from "@/components/SpaceAuth";
@@ -69,6 +69,25 @@ function StudentShell({
 }) {
   const [tab, setTab] = useState<Tab>("resources");
   const notifications = useNotifications(client, userId);
+
+  const [className, setClassName] = useState<string | null>(null);
+  const [levelName, setLevelName] = useState<string | null>(null);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      if (classId) {
+        const { data } = await client.from("classes").select("name").eq("id", classId).maybeSingle();
+        if (active) setClassName(data?.name ?? null);
+      }
+      if (levelId) {
+        const { data } = await client.from("levels").select("name").eq("id", levelId).maybeSingle();
+        if (active) setLevelName(data?.name ?? null);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [client, classId, levelId]);
 
   const tabs: { key: Tab; label: string; badge?: number }[] = [
     { key: "resources", label: "الدروس والتمارين" },
@@ -151,6 +170,14 @@ function StudentShell({
                 <dd className="font-semibold text-foreground" dir="ltr">
                   {email}
                 </dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">القسم</dt>
+                <dd className="font-semibold text-foreground">{className ?? "—"}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">المستوى</dt>
+                <dd className="font-semibold text-foreground">{levelName ?? "—"}</dd>
               </div>
               <div className="flex justify-between gap-4">
                 <dt className="text-muted-foreground">الحالة</dt>
