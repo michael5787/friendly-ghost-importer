@@ -23,21 +23,18 @@ export function ClassStudents({
   classes: ClassRow[];
   isAdmin: boolean;
 }) {
-  const [selected, setSelected] = useState<string | null>(isAdmin ? null : classes[0]?.id ?? null);
+  const [selected, setSelected] = useState<string | null>(null);
   const [students, setStudents] = useState<StudentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!isAdmin && !selected && classes.length) setSelected(classes[0]!.id);
-  }, [isAdmin, selected, classes]);
 
   useEffect(() => {
     let active = true;
     setLoading(true);
     setError(null);
     (async () => {
-      if (!isAdmin && !selected) {
+      const classIds = classes.map((c) => c.id);
+      if (!isAdmin && classIds.length === 0) {
         if (active) {
           setStudents([]);
           setLoading(false);
@@ -48,7 +45,7 @@ export function ClassStudents({
         .from("profiles")
         .select("id, full_name, email, status, class_id")
         .eq("space", "talameed");
-      if (!isAdmin) query = query.eq("class_id", selected!);
+      if (!isAdmin) query = query.in("class_id", classIds);
       const { data, error: err } = await query.order("full_name", {
         ascending: true,
         nullsFirst: false,
@@ -66,7 +63,7 @@ export function ClassStudents({
   const className = (id: string | null) => classes.find((c) => c.id === id)?.name ?? null;
 
   const groups = useMemo(() => {
-    if (isAdmin && !selected) {
+    if (!selected) {
       const byClass = new Map<string, StudentRow[]>();
       for (const s of students) {
         const key = s.class_id ?? "";
@@ -77,10 +74,9 @@ export function ClassStudents({
         .map(([cid, rows]) => ({ label: className(cid) || "غير معيّن إلى قسم", rows }))
         .sort((a, b) => a.label.localeCompare(b.label, "ar"));
     }
-    const label = selected ? (className(selected) ?? "") : "";
-    return [{ label, rows: students }];
+    return [{ label: className(selected) ?? "", rows: students }];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [students, isAdmin, selected, classes]);
+  }, [students, selected, classes]);
 
   return (
     <section className="text-start">
@@ -105,7 +101,7 @@ export function ClassStudents({
           onChange={(e) => setSelected(e.target.value || null)}
           aria-label="اختيار القسم"
         >
-          {isAdmin ? <option value="">كل الأقسام</option> : null}
+          <option value="">كل الأقسام</option>
           {!isAdmin && classes.length === 0 ? <option value="">لا توجد أقسام</option> : null}
           {classes.map((c) => (
             <option key={c.id} value={c.id}>
