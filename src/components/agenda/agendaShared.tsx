@@ -86,7 +86,7 @@ export function AgendaCard({
   client: Client;
   row: AgendaRow;
   resource?: ResourceRow;
-  className?: string;
+  className?: string | undefined;
   onError: (msg: string) => void;
   actions?: React.ReactNode;
 }) {
