@@ -101,7 +101,7 @@ export function ClassStudents({
           onChange={(e) => setSelected(e.target.value || null)}
           aria-label="اختيار القسم"
         >
-          {isAdmin ? <option value="">كل الأقسام</option> : null}
+          <option value="">كل الأقسام</option>
           {!isAdmin && classes.length === 0 ? <option value="">لا توجد أقسام</option> : null}
           {classes.map((c) => (
             <option key={c.id} value={c.id}>
