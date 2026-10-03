@@ -28,7 +28,7 @@ export const Route = createFileRoute("/taleem")({
   component: Page,
 });
 
-type Tab = "resources" | "agenda" | "questions" | "answers" | "students" | "notifications" | "account";
+type Tab = "resources" | "agenda" | "evaluations" | "questions" | "answers" | "students" | "notifications" | "account";
 type ClassRow = Database["public"]["Tables"]["classes"]["Row"];
 
 function Page() {
