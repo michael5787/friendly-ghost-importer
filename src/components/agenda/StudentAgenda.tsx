@@ -92,6 +92,7 @@ export function StudentAgenda({
               key={row.id}
               client={client}
               row={row}
+              className={className || undefined}
               {...(row.resource_id && resources[row.resource_id]
                 ? { resource: resources[row.resource_id] }
                 : {})}
