@@ -49,6 +49,7 @@ export function ClassStudents({
         .select("id, full_name, email, status, class_id")
         .eq("space", "talameed");
       if (!isAdmin) query = query.in("class_id", classIds);
+      if (selected) query = query.eq("class_id", selected);   
       const { data, error: err } = await query.order("full_name", {
         ascending: true,
         nullsFirst: false,
