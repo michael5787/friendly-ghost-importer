@@ -236,7 +236,7 @@ export function UsersPanel({ client }: { client: SupabaseClient<Database> }) {
   );
 }
 
-function Avatar({ url, label, size = 40 }: { url?: string; label: string; size?: number }) {
+function Avatar({ url, label, size = 40 }: { url?: string | undefined; label: string; size?: number }) {
   return url ? (
     <img src={url} alt={label} style={{ width: size, height: size }} className="shrink-0 rounded-full border border-border object-cover" />
   ) : (
@@ -269,7 +269,7 @@ function UserEditor({
   onCancel: () => void;
   onSave: (patch: Partial<ProfileRow>, teacherClassIds?: string[]) => Promise<void>;
   client: SupabaseClient<Database>;
-  avatarUrl?: string;
+  avatarUrl?: string | undefined;
   onAvatarChanged: () => Promise<void>;
 }) {
   const [avBusy, setAvBusy] = useState(false);
