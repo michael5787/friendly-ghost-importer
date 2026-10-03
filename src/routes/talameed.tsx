@@ -8,6 +8,7 @@ import { StudentAgenda } from "@/components/agenda/StudentAgenda";
 import { QuestionsSpace } from "@/components/questions/QuestionsSpace";
 import { NotificationsPanel } from "@/components/NotificationsPanel";
 import { useNotifications } from "@/components/resources/useSubmissions";
+import { StudentGrades } from "@/components/grades/Grades";
 import { STATUS_LABEL } from "@/lib/spaces";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
@@ -92,6 +93,7 @@ function StudentShell({
   const tabs: { key: Tab; label: string; badge?: number }[] = [
     { key: "resources", label: "الدروس والتمارين" },
     { key: "agenda", label: "المفكرة" },
+    { key: "grades", label: "المراقبة المستمرة" },
     { key: "questions", label: "الأسئلة والأجوبة" },
     { key: "answers", label: "أجوبتي" },
     { key: "notifications", label: "الإشعارات", badge: notifications.unread },
@@ -140,6 +142,8 @@ function StudentShell({
           />
         ) : tab === "agenda" ? (
           <StudentAgenda client={client} classId={classId} studentId={userId} />
+            ) : tab === "grades" ? (
+          <StudentGrades client={client} classId={classId} studentId={userId} />
         ) : tab === "questions" ? (
           <QuestionsSpace
             client={client}
