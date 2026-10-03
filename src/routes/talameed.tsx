@@ -27,7 +27,7 @@ export const Route = createFileRoute("/talameed")({
   component: Page,
 });
 
-type Tab = "resources" | "agenda" | "questions" | "answers" | "notifications" | "account";
+type Tab = "resources" | "agenda" | "grades" | "questions" | "answers" | "notifications" | "account";
 
 function Page() {
   return (
