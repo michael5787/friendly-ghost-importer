@@ -23,14 +23,10 @@ export function ClassStudents({
   classes: ClassRow[];
   isAdmin: boolean;
 }) {
-  const [selected, setSelected] = useState<string | null>(isAdmin ? null : classes[0]?.id ?? null);
+  const [selected, setSelected] = useState<string | null>(null);
   const [students, setStudents] = useState<StudentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!isAdmin && !selected && classes.length) setSelected(classes[0]!.id);
-  }, [isAdmin, selected, classes]);
 
   useEffect(() => {
     let active = true;
