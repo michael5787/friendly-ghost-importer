@@ -50,6 +50,13 @@
       "when": 1790924544304,
       "tag": "0006_create_chapters",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791019070989,
+      "tag": "0007_profile_avatars",
+      "breakpoints": true
     }
   ]
 }
