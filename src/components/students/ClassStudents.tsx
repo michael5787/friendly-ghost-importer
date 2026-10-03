@@ -33,7 +33,8 @@ export function ClassStudents({
     setLoading(true);
     setError(null);
     (async () => {
-      if (!isAdmin && !selected) {
+      const classIds = classes.map((c) => c.id);
+      if (!isAdmin && classIds.length === 0) {
         if (active) {
           setStudents([]);
           setLoading(false);
@@ -44,7 +45,7 @@ export function ClassStudents({
         .from("profiles")
         .select("id, full_name, email, status, class_id")
         .eq("space", "talameed");
-      if (!isAdmin) query = query.eq("class_id", selected!);
+      if (!isAdmin) query = query.in("class_id", classIds);
       const { data, error: err } = await query.order("full_name", {
         ascending: true,
         nullsFirst: false,
