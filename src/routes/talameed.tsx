@@ -142,7 +142,9 @@ function StudentShell({
         </div>
       </header>
 
-      {tour.eligible ? <StudentTour steps={tourSteps} onStep={setTab} onClose={tour.close} /> : null}
+      {tour.eligible ? (
+        <StudentTour steps={tourSteps} onStep={setTab} onClose={tour.close} onDisable={tour.disable} />
+      ) : null}
       <main className="mx-auto w-full max-w-4xl px-4 py-10">
         {tab === "resources" ? (
           <StudentResources
