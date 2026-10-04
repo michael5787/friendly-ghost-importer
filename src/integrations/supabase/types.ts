@@ -150,6 +150,47 @@ export type Database = {
           },
         ]
       }
+      evaluation_grades: {
+        Row: {
+          comment: string | null
+          created_at: string
+          evaluation_id: string
+          grade: number
+          id: string
+          student_id: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          evaluation_id: string
+          grade: number
+          id?: string
+          student_id: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          evaluation_id?: string
+          grade?: number
+          id?: string
+          student_id?: string
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluation_grades_evaluation_id_fkey"
+            columns: ["evaluation_id"]
+            isOneToOne: false
+            referencedRelation: "agenda_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       levels: {
         Row: {
           code: string | null
