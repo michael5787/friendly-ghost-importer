@@ -5,3 +5,5 @@
 - [x] Student: pending = future homework whose resource_id has no submission by student; Teacher: first future homework date
 - [x] Diagnose/fix "تعذّر تحميل المفكرة" load failure (student, 2 Sept 2026) — query/access behaviour
 - [x] Demo page at / with in-memory data so behaviour is verifiable without a backend
+- [ ] Upload avatar élève (حسابي)
+- [ ] Afficher avatars partout (listes, Q/R)
