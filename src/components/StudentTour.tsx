@@ -85,31 +85,35 @@ export function StudentTour<K extends string>({
           </span>
         </div>
         <p className="text-sm leading-relaxed text-muted-foreground">{step.text}</p>
-        <div className="mt-4 flex items-center justify-between gap-2">
-          <div className="flex flex-col items-start gap-1">
-            <button type="button" className="btn-text text-sm" onClick={onClose}>
+        <div className="mt-4 flex flex-col gap-1.5">
+          <div className="flex items-center justify-between gap-2">
+            <button type="button" className="btn-text whitespace-nowrap text-sm" onClick={onClose}>
               تخطي
             </button>
-            {onDisable ? (
-              <button type="button" className="btn-text text-xs text-muted-foreground" onClick={onDisable}>
-                عدم العرض مرة أخرى
+            <div className="flex gap-2">
+              {i > 0 ? (
+                <button type="button" className="btn-text whitespace-nowrap text-sm" onClick={() => setI(i - 1)}>
+                  السابق
+                </button>
+              ) : null}
+              <button
+                type="button"
+                className="whitespace-nowrap rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground"
+                onClick={() => (last ? onClose() : setI(i + 1))}
+              >
+                {last ? "فهمت" : "التالي"}
               </button>
-            ) : null}
+            </div>
           </div>
-          <div className="flex gap-2">
-            {i > 0 ? (
-              <button type="button" className="btn-text text-sm" onClick={() => setI(i - 1)}>
-                السابق
-              </button>
-            ) : null}
+          {onDisable ? (
             <button
               type="button"
-              className="rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground"
-              onClick={() => (last ? onClose() : setI(i + 1))}
+              className="btn-text w-fit whitespace-nowrap text-xs text-muted-foreground"
+              onClick={onDisable}
             >
-              {last ? "فهمت" : "التالي"}
+              عدم العرض مرة أخرى
             </button>
-          </div>
+          ) : null}
         </div>
       </div>
     </div>
