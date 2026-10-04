@@ -144,6 +144,47 @@ export type Database = {
           },
         ]
       }
+      evaluation_grades: {
+        Row: {
+          comment: string | null
+          created_at: string
+          evaluation_id: string
+          grade: number
+          id: string
+          student_id: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          evaluation_id: string
+          grade: number
+          id?: string
+          student_id: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          evaluation_id?: string
+          grade?: number
+          id?: string
+          student_id?: string
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluation_grades_evaluation_id_fkey"
+            columns: ["evaluation_id"]
+            isOneToOne: false
+            referencedRelation: "agenda_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       levels: {
         Row: {
           code: string | null
@@ -217,6 +258,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_path: string | null
           class_id: string | null
           created_at: string
           email: string
@@ -229,6 +271,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          avatar_path?: string | null
           class_id?: string | null
           created_at?: string
           email: string
@@ -241,6 +284,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          avatar_path?: string | null
           class_id?: string | null
           created_at?: string
           email?: string
