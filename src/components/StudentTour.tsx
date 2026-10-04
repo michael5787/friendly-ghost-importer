@@ -17,23 +17,30 @@ export function useTourEligible(userId: string) {
       sessionStorage.setItem(sessKey, "1");
     }
     const dismissed = sessionStorage.getItem(`tour:done:${userId}`);
-    setEligible(count <= MAX_LOGINS && !dismissed);
+    const disabledForever = localStorage.getItem(`tour:disabled:${userId}`);
+    setEligible(count <= MAX_LOGINS && !dismissed && !disabledForever);
   }, [userId]);
   const close = () => {
     sessionStorage.setItem(`tour:done:${userId}`, "1");
     setEligible(false);
   };
-  return { eligible, close };
+  const disable = () => {
+    localStorage.setItem(`tour:disabled:${userId}`, "1");
+    setEligible(false);
+  };
+  return { eligible, close, disable };
 }
 
 export function StudentTour<K extends string>({
   steps,
   onStep,
   onClose,
+  onDisable,
 }: {
   steps: TourStep<K>[];
   onStep: (key: K) => void;
   onClose: () => void;
+  onDisable?: () => void;
 }) {
   const [i, setI] = useState(0);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
