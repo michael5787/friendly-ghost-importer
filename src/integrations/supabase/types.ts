@@ -14,12 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-       evaluation_grades: {
-        Row: { comment: string | null; created_at: string; evaluation_id: string; grade: number; id: string; student_id: string; teacher_id: string; updated_at: string }
-        Insert: { comment?: string | null; created_at?: string; evaluation_id: string; grade: number; id?: string; student_id: string; teacher_id: string; updated_at?: string }
-        Update: { comment?: string | null; created_at?: string; evaluation_id?: string; grade?: number; id?: string; student_id?: string; teacher_id?: string; updated_at?: string }
-        Relationships: []
-      }
       agenda_events: {
         Row: {
           class_id: string
