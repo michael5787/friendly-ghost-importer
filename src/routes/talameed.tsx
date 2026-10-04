@@ -9,6 +9,7 @@ import { QuestionsSpace } from "@/components/questions/QuestionsSpace";
 import { NotificationsPanel } from "@/components/NotificationsPanel";
 import { useNotifications } from "@/components/resources/useSubmissions";
 import { StudentGrades } from "@/components/grades/Grades";
+import { StudentTour, useTourEligible, type TourStep } from "@/components/StudentTour";
 import { STATUS_LABEL } from "@/lib/spaces";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
@@ -70,6 +71,16 @@ function StudentShell({
 }) {
   const [tab, setTab] = useState<Tab>("resources");
   const notifications = useNotifications(client, userId);
+  const tour = useTourEligible(userId);
+  const tourSteps: TourStep<Tab>[] = [
+    { key: "resources", title: "الدروس والتمارين", text: "هنا تجد دروس وتمارين قسمك مرتبة حسب المحاور، ويمكنك إرسال أجوبتك." },
+    { key: "agenda", title: "المفكرة", text: "تابع مواعيد الواجبات المنزلية والتقييمات التي يبرمجها أساتذتك." },
+    { key: "grades", title: "المراقبة المستمرة", text: "اطّلع على نقاطك وتقييماتك." },
+    { key: "questions", title: "الأسئلة والأجوبة", text: "اطرح سؤالك على أستاذ قسمك بملف، وشاهد أسئلة زملائك وأجوبة الأستاذ." },
+    { key: "answers", title: "أجوبتي", text: "راجع الأجوبة التي أرسلتها وتصحيحها." },
+    { key: "notifications", title: "الإشعارات", text: "تصلك هنا التنبيهات عند إضافة حدث جديد أو رد على سؤالك." },
+    { key: "account", title: "حسابي", text: "معلوماتك الشخصية، قسمك ومستواك، وزر تسجيل الخروج." },
+  ];
 
   const [className, setClassName] = useState<string | null>(null);
   const [levelName, setLevelName] = useState<string | null>(null);
@@ -112,6 +123,7 @@ function StudentShell({
                 key={t.key}
                 type="button"
                 className="nav-menu-item"
+                data-tour={t.key}
                 data-active={tab === t.key}
                 onClick={() => setTab(t.key)}
               >
@@ -130,6 +142,7 @@ function StudentShell({
         </div>
       </header>
 
+      {tour.eligible ? <StudentTour steps={tourSteps} onStep={setTab} onClose={tour.close} /> : null}
       <main className="mx-auto w-full max-w-4xl px-4 py-10">
         {tab === "resources" ? (
           <StudentResources
