@@ -1,5 +1,5 @@
 # Roadmap
-- [ ] Persist the open section in student, teacher and administration spaces across reloads and tab focus changes
+- [x] Persist the open section in student, teacher and administration spaces across reloads and tab focus changes
 - [x] Hide administration links from navigation and page footers while keeping /admin directly accessible
 - [x] Recreate agenda module from friendly-ghost-importer (useAgenda, agendaShared, AgendaCalendar, StudentAgenda, TeacherAgenda + deps)
 - [x] Add useFirstPendingDay: auto-jump once to first eligible future homework date before manual navigation
