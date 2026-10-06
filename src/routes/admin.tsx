@@ -10,6 +10,7 @@ import { UsersPanel } from "@/components/admin/UsersPanel";
 import type { Database } from "@/integrations/supabase/types";
 import { SPACE_LABEL, STATUS_LABEL, type SpaceKey } from "@/lib/spaces";
 import { externalAdminUrl } from "@/lib/admin-host";
+import { useSpaceSection } from "@/hooks/useSpaceSection";
 
 
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
@@ -63,6 +64,7 @@ function Page() {
     <SpaceAuth space="admin">
       {({ session, profile, client, signOut }) => (
         <AdminDashboard
+          userId={session.user.id}
           name={profile.full_name?.trim() || session.user.email?.split("@")[0] || "المشرف"}
           email={session.user.email ?? ""}
           client={client}
@@ -75,17 +77,19 @@ function Page() {
 
 
 function AdminDashboard({
+  userId,
   name,
   email,
   client,
   signOut,
 }: {
+  userId: string;
   name: string;
   email: string;
   client: SupabaseClient<Database>;
   signOut: () => Promise<void>;
 }) {
-  const [tab, setTab] = useState<Tab>("accounts");
+  const [tab, setTab] = useSpaceSection<Tab>("admin", userId, "accounts", TABS.map((item) => item.key));
 
   return (
     <div className="min-h-screen bg-canvas">

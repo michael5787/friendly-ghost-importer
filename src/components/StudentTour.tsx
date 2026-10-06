@@ -36,20 +36,25 @@ export function StudentTour<K extends string>({
   onStep,
   onClose,
   onDisable,
+  initialStep,
 }: {
   steps: TourStep<K>[];
   onStep: (key: K) => void;
   onClose: () => void;
   onDisable?: () => void;
+  initialStep?: K;
 }) {
-  const [i, setI] = useState(0);
+  const [i, setI] = useState(() => Math.max(0, steps.findIndex((item) => item.key === initialStep)));
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
-  const step = steps[i]!;
+  const step = steps[i] ?? steps[0];
 
-  useEffect(() => onStep(step.key), [step.key]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (step) onStep(step.key);
+  }, [step?.key]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useLayoutEffect(() => {
     const place = () => {
+      if (!step) return;
       const el = document.querySelector<HTMLElement>(`[data-tour="${step.key}"]`);
       if (!el) return setPos(null);
       el.scrollIntoView({ block: "nearest", inline: "center" });
@@ -61,9 +66,11 @@ export function StudentTour<K extends string>({
     place();
     window.addEventListener("resize", place);
     return () => window.removeEventListener("resize", place);
-  }, [step.key]);
+  }, [step?.key]);
 
   const last = i === steps.length - 1;
+
+  if (!step) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-foreground/30" dir="rtl">

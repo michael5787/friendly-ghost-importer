@@ -11,6 +11,7 @@ import { useNotifications } from "@/components/resources/useSubmissions";
 import { StudentGrades } from "@/components/grades/Grades";
 import { StudentTour, useTourEligible, type TourStep } from "@/components/StudentTour";
 import { STATUS_LABEL } from "@/lib/spaces";
+import { useSpaceSection } from "@/hooks/useSpaceSection";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -69,7 +70,7 @@ function StudentShell({
   classId: string | null;
   signOut: () => Promise<void>;
 }) {
-  const [tab, setTab] = useState<Tab>("resources");
+  const [tab, setTab, sectionReady] = useSpaceSection<Tab>("talameed", userId, "resources", ["resources", "agenda", "grades", "questions", "answers", "notifications", "account"]);
   const notifications = useNotifications(client, userId);
   const tour = useTourEligible(userId);
   const tourSteps: TourStep<Tab>[] = [
@@ -142,8 +143,8 @@ function StudentShell({
         </div>
       </header>
 
-      {tour.eligible ? (
-        <StudentTour steps={tourSteps} onStep={setTab} onClose={tour.close} onDisable={tour.disable} />
+      {tour.eligible && sectionReady ? (
+        <StudentTour steps={tourSteps} initialStep={tab} onStep={setTab} onClose={tour.close} onDisable={tour.disable} />
       ) : null}
       <main className="mx-auto w-full max-w-4xl px-4 py-10">
         {tab === "resources" ? (
