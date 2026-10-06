@@ -9,6 +9,7 @@ import { TeacherSubmissions } from "@/components/resources/TeacherSubmissions";
 import { TeacherAgenda } from "@/components/agenda/TeacherAgenda";
 import { QuestionsSpace } from "@/components/questions/QuestionsSpace";
 import { TeacherEvaluations } from "@/components/grades/Grades";
+import { TeacherHomeworks } from "@/components/grades/Homework";
 import { ClassStudents } from "@/components/students/ClassStudents";
 import { NotificationsPanel } from "@/components/NotificationsPanel";
 import { useNotifications } from "@/components/resources/useSubmissions";
@@ -144,7 +145,10 @@ function TeacherShell({
         ) : tab === "agenda" ? (
           <TeacherAgenda client={client} teacherId={userId} classes={classes} />
             ) : tab === "evaluations" ? (
-          <TeacherEvaluations client={client} classes={classes} />
+          <div className="space-y-6">
+            <TeacherEvaluations client={client} classes={classes} />
+            <TeacherHomeworks client={client} classes={classes} />
+          </div>
         ) : tab === "questions" ? (
           <QuestionsSpace
             client={client}
