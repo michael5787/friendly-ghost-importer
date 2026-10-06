@@ -9,6 +9,7 @@ import { QuestionsSpace } from "@/components/questions/QuestionsSpace";
 import { NotificationsPanel } from "@/components/NotificationsPanel";
 import { useNotifications } from "@/components/resources/useSubmissions";
 import { StudentGrades } from "@/components/grades/Grades";
+import { StudentHomeworks } from "@/components/grades/Homework";
 import { StudentTour, useTourEligible, type TourStep } from "@/components/StudentTour";
 import { STATUS_LABEL } from "@/lib/spaces";
 import { useSpaceSection } from "@/hooks/useSpaceSection";
@@ -159,7 +160,10 @@ function StudentShell({
         ) : tab === "agenda" ? (
           <StudentAgenda client={client} classId={classId} studentId={userId} />
             ) : tab === "grades" ? (
-          <StudentGrades client={client} classId={classId} studentId={userId} />
+          <div className="space-y-6">
+            <StudentGrades client={client} classId={classId} studentId={userId} />
+            <StudentHomeworks client={client} classId={classId} studentId={userId} />
+          </div>
         ) : tab === "questions" ? (
           <QuestionsSpace
             client={client}
