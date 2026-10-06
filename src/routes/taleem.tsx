@@ -13,6 +13,7 @@ import { ClassStudents } from "@/components/students/ClassStudents";
 import { NotificationsPanel } from "@/components/NotificationsPanel";
 import { useNotifications } from "@/components/resources/useSubmissions";
 import { STATUS_LABEL } from "@/lib/spaces";
+import { useSpaceSection } from "@/hooks/useSpaceSection";
 
 export const Route = createFileRoute("/taleem")({
   ssr: false,
@@ -67,7 +68,7 @@ function TeacherShell({
   signOut: () => Promise<void>;
   isAdmin: boolean;
 }) {
-  const [tab, setTab] = useState<Tab>("resources");
+  const [tab, setTab] = useSpaceSection<Tab>("taleem", userId, "resources", ["resources", "agenda", "evaluations", "questions", "answers", "students", "notifications", "account"]);
   const [classes, setClasses] = useState<ClassRow[]>([]);
   const notifications = useNotifications(client, userId);
 
