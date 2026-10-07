@@ -19,10 +19,19 @@ function monthBounds(dateKey: string) {
   return { from: `${y}-${mm}-01`, to: `${y}-${mm}-${String(last).padStart(2, "0")}` };
 }
 
-function buildHtml(rows: LogRow[], classes: ClassRow[], from: string, to: string, teacherName: string) {
+function buildHtml(
+  rows: LogRow[],
+  classes: ClassRow[],
+  from: string,
+  to: string,
+  teacherName: string,
+  levelNames: string[],
+) {
   const byDay = new Map<string, LogRow[]>();
   rows.forEach((r) => byDay.set(r.log_date, [...(byDay.get(r.log_date) ?? []), r]));
   const cls = (id: string) => classes.find((c) => c.id === id)?.name ?? "—";
+  const usedClassIds = new Set(rows.map((r) => r.class_id));
+  const usedClassNames = classes.filter((c) => usedClassIds.has(c.id)).map((c) => c.name);
   const hours = rows.reduce((s, r) => {
     const m = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
     return s + (m(r.end_time) - m(r.start_time)) / 60;
@@ -46,27 +55,24 @@ function buildHtml(rows: LogRow[], classes: ClassRow[], from: string, to: string
     .join("");
   return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
 <title>دفتر الدروس ${from} — ${to}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  @page { size: A4; margin: 14mm 12mm 16mm; }
   * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  body { font-family: Cairo, sans-serif; color: #1f2a24; margin: 0; font-size: 11.5pt; }
+  body { font-family: Cairo, sans-serif; color: #1f2a24; margin: 0; font-size: 11.5pt; width: 794px; padding: 40px 34px; background: #fff; }
   header { border-radius: 14px; padding: 22px 26px; color: #fff;
     background: linear-gradient(135deg, #14532d 0%, #1f7a4a 60%, #c9a227 140%); position: relative; overflow: hidden; }
-  header::after { content: ""; position: absolute; left: -40px; top: -40px; width: 180px; height: 180px;
-    border-radius: 50%; border: 18px solid rgba(255,255,255,.08); }
   header h1 { font-family: Amiri, serif; font-size: 28pt; margin: 0 0 4px; }
-  header p { margin: 0; opacity: .9; }
+  header p { margin: 0 0 3px; opacity: .92; font-size: 11pt; }
+  header .meta { font-weight: 600; }
   .stats { display: flex; gap: 10px; margin: 14px 0 18px; }
   .stat { flex: 1; border: 1px solid #e3e8e4; border-radius: 10px; padding: 10px 14px; background: #f7faf8; }
   .stat b { display: block; font-size: 16pt; color: #14532d; }
   .stat span { font-size: 9pt; color: #6b7a71; }
-  .day { margin-bottom: 14px; break-inside: avoid-page; }
+  .day { margin-bottom: 14px; }
   .day h2 { font-size: 12.5pt; color: #14532d; margin: 0 0 8px; padding-bottom: 5px;
     border-bottom: 2px solid #c9a227; display: flex; align-items: center; gap: 8px; }
   .dot { width: 9px; height: 9px; border-radius: 50%; background: #c9a227; display: inline-block; }
-  .entry { display: flex; gap: 12px; margin-bottom: 8px; break-inside: avoid; }
+  .entry { display: flex; gap: 12px; margin-bottom: 8px; }
   .time { width: 68px; flex-shrink: 0; text-align: center; border-radius: 8px; background: #e8f3ec;
     color: #14532d; padding: 8px 4px; direction: ltr; }
   .time b { display: block; font-size: 12pt; } .time span { font-size: 9pt; }
@@ -79,18 +85,22 @@ function buildHtml(rows: LogRow[], classes: ClassRow[], from: string, to: string
   .sign { margin-top: 30px; display: flex; justify-content: space-between; font-size: 10pt; }
   .sign div { width: 40%; border-top: 1px dashed #9aa79f; padding-top: 6px; text-align: center; }
 </style></head><body>
-<header><h1>دفتر الدروس</h1><p>متابعة العمل المنجز${teacherName ? ` — الأستاذ(ة): ${esc(teacherName)}` : ""}</p>
-<p>الفترة: من ${esc(fmtDay(from))} إلى ${esc(fmtDay(to))}</p></header>
+<header>
+  <h1>دفتر الدروس</h1>
+  ${teacherName ? `<p class="meta">الأستاذ(ة): ${esc(teacherName)}</p>` : ""}
+  ${levelNames.length ? `<p>المستويات: ${esc(levelNames.join("، "))}</p>` : ""}
+  ${usedClassNames.length ? `<p>الأقسام: ${esc(usedClassNames.join("، "))}</p>` : ""}
+  <p>الفترة: من ${esc(fmtDay(from))} إلى ${esc(fmtDay(to))}</p>
+</header>
 <div class="stats">
   <div class="stat"><b>${rows.length}</b><span>حصة مسجلة</span></div>
   <div class="stat"><b>${hours}</b><span>ساعة</span></div>
   <div class="stat"><b>${byDay.size}</b><span>يوم عمل</span></div>
-  <div class="stat"><b>${new Set(rows.map((r) => r.class_id)).size}</b><span>قسم</span></div>
+  <div class="stat"><b>${usedClassIds.size}</b><span>قسم</span></div>
 </div>
 ${days || `<p class="empty">لا توجد حصص مسجلة في هذه الفترة.</p>`}
 <div class="sign"><div>إمضاء الأستاذ(ة)</div><div>إمضاء وختم المدير(ة)</div></div>
 <footer><span>Madauros</span><span>أُنشئ في ${esc(new Date().toLocaleDateString("ar-DZ"))}</span></footer>
-<script>document.fonts.ready.then(()=>setTimeout(()=>print(),300));</script>
 </body></html>`;
 }
 
@@ -117,25 +127,78 @@ export function LessonLogPdfButton({
   const generate = async () => {
     if (from > to) return setError("تاريخ البداية بعد تاريخ النهاية.");
     setError(null);
-    const win = window.open("", "_blank");
-    if (!win) return setError("اسمح بالنوافذ المنبثقة لتنزيل الملف.");
     setBusy(true);
-    const { data, error: err } = await client
-      .from("lesson_logs")
-      .select("*")
-      .eq("teacher_id", teacherId)
-      .gte("log_date", from)
-      .lte("log_date", to)
-      .order("log_date")
-      .order("start_time");
-    setBusy(false);
-    if (err) {
-      win.close();
-      return setError("تعذّر تحميل الحصص.");
+    try {
+      const [logsRes, profileRes, levelsRes] = await Promise.all([
+        client
+          .from("lesson_logs")
+          .select("*")
+          .eq("teacher_id", teacherId)
+          .gte("log_date", from)
+          .lte("log_date", to)
+          .order("log_date")
+          .order("start_time"),
+        client.from("profiles").select("full_name").eq("id", teacherId).maybeSingle(),
+        client.from("levels").select("id, name"),
+      ]);
+      if (logsRes.error) return setError("تعذّر تحميل الحصص.");
+      const rows = logsRes.data ?? [];
+      const name = teacherName || profileRes.data?.full_name?.trim() || "";
+      const levelById = new Map((levelsRes.data ?? []).map((l) => [l.id, l.name]));
+      const levelNames = [
+        ...new Set(classes.map((c) => (c.level_id ? levelById.get(c.level_id) : undefined)).filter(Boolean)),
+      ] as string[];
+
+      const html = buildHtml(rows, classes, from, to, name, levelNames);
+
+      // Render the document off-screen, capture it, then save a real PDF file.
+      const iframe = document.createElement("iframe");
+      iframe.style.position = "fixed";
+      iframe.style.left = "-10000px";
+      iframe.style.top = "0";
+      iframe.style.width = "794px";
+      iframe.style.height = "1123px";
+      document.body.appendChild(iframe);
+      try {
+        const doc = iframe.contentDocument!;
+        doc.open();
+        doc.write(html);
+        doc.close();
+        await (iframe.contentWindow as Window & { document: Document }).document.fonts.ready;
+        await new Promise((r) => setTimeout(r, 400));
+
+        const [{ default: html2canvas }, { jsPDF }] = await Promise.all([import("html2canvas"), import("jspdf")]);
+        const canvas = await html2canvas(doc.body, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+        const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
+        const pageW = pdf.internal.pageSize.getWidth();
+        const pageH = pdf.internal.pageSize.getHeight();
+        const imgH = (canvas.height * pageW) / canvas.width;
+        const pxPerMm = canvas.height / imgH;
+        let rendered = 0;
+        let page = 0;
+        while (rendered < canvas.height) {
+          const sliceH = Math.min(canvas.height - rendered, pageH * pxPerMm);
+          const slice = document.createElement("canvas");
+          slice.width = canvas.width;
+          slice.height = Math.ceil(sliceH);
+          const ctx = slice.getContext("2d")!;
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, slice.width, slice.height);
+          ctx.drawImage(canvas, 0, rendered, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+          if (page > 0) pdf.addPage();
+          pdf.addImage(slice.toDataURL("image/jpeg", 0.92), "JPEG", 0, 0, pageW, sliceH / pxPerMm);
+          rendered += sliceH;
+          page += 1;
+        }
+        pdf.save(`دفتر-الدروس-${from}_${to}.pdf`);
+      } finally {
+        iframe.remove();
+      }
+    } catch {
+      setError("تعذّر إنشاء الملف.");
+    } finally {
+      setBusy(false);
     }
-    win.document.open();
-    win.document.write(buildHtml(data ?? [], classes, from, to, teacherName));
-    win.document.close();
   };
 
   return (
