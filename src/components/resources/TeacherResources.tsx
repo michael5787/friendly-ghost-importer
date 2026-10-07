@@ -4,7 +4,6 @@ import type { Database } from "@/integrations/supabase/types";
 import {
   ACCEPTED,
   CATEGORY_LABEL,
-  formatSize,
   isAccepted,
   openResource,
   useLevels,
