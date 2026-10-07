@@ -68,8 +68,7 @@ export function StudentSubmissions({
                 <div>
                   <div className="text-sm font-semibold text-foreground">{row.resource_title}</div>
                   <div className="mt-1 text-xs text-muted-foreground">
-                    {row.file_name}
-                    {row.file_size ? ` • ${formatSize(row.file_size)}` : ""} • {formatDate(row.created_at)}
+                    {row.file_name} • {formatDate(row.created_at)}
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
