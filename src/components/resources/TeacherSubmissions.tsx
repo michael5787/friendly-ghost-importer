@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { Butterfly } from "@/components/Butterfly";
-import { formatSize } from "./useResources";
 import { formatDate, notify, openSubmission, useSubmissions, type SubmissionItem } from "./useSubmissions";
 
 type ClassRow = Database["public"]["Tables"]["classes"]["Row"];

@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { Butterfly } from "@/components/Butterfly";
-import { formatSize } from "./useResources";
+import { formatDate } from "./useResources";
 import { formatDate, openSubmission, useSubmissions, type SubmissionItem } from "./useSubmissions";
 
 export function StudentSubmissions({

@@ -5,7 +5,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { Butterfly } from "@/components/Butterfly";
 import { checkSubmissionFile, SUBMISSION_ACCEPT } from "@/lib/safeFile";
 import { formatDate, notify } from "@/components/resources/useSubmissions";
-import { formatSize, useChapters } from "@/components/resources/useResources";
+import { useChapters } from "@/components/resources/useResources";
 import {
   openQuestionFile,
   uploadQuestionFile,
