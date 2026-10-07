@@ -111,6 +111,11 @@ export function SpaceAuth({ space, children }: Props) {
     } catch {
       // Storage unavailable: nothing to clear.
     }
+    try {
+      if (session) localStorage.removeItem(`profile-cache:${space}:${session.user.id}`);
+    } catch {
+      // ignore
+    }
     await client.auth.signOut();
     setSession(null);
     setProfile(null);
