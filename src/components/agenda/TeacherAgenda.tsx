@@ -224,7 +224,7 @@ export function TeacherAgenda({
         />
         <div className="flex gap-2 sm:col-span-2">
           <button type="submit" className="btn-primary" disabled={busy}>
-            {editing ? "حفظ التعديل" : "إضافة إلى المفكرة"}
+            {editing ? "حفظ التعديل" : "إضافة إلى المذكرة"}
           </button>
           {editing ? (
             <button type="button" className="btn-text" onClick={reset}>
