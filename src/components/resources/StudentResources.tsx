@@ -6,7 +6,6 @@ import { SUBMISSION_ACCEPT } from "@/lib/safeFile";
 import { submitAnswer } from "./submitAnswer";
 import {
   CATEGORY_LABEL,
-  formatSize,
   openResource,
   useLevels,
   useResourceList,
