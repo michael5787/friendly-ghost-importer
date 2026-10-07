@@ -61,16 +61,37 @@ export function SpaceAuth({ space, children }: Props) {
       setProfileLoaded(false);
       return;
     }
-    setProfileLoaded(false);
+    // Show the cached profile instantly, then refresh it in the background.
+    const cacheKey = `profile-cache:${space}:${sessionUserId}`;
+    let cached = false;
+    try {
+      const raw = localStorage.getItem(cacheKey);
+      if (raw) {
+        const c = JSON.parse(raw) as { profile: ProfileRow | null; isAdmin: boolean };
+        setProfile(c.profile);
+        setIsAdmin(c.isAdmin);
+        setProfileLoaded(true);
+        cached = true;
+      }
+    } catch {
+      // ignore cache errors
+    }
+    if (!cached) setProfileLoaded(false);
     void (async () => {
       const [{ data: prof }, { data: roles }] = await Promise.all([
         client.from("profiles").select("*").eq("id", sessionUserId).maybeSingle(),
         client.from("user_roles").select("role").eq("user_id", sessionUserId),
       ]);
       if (!active) return;
+      const admin = (roles ?? []).some((r) => r.role === "super_admin");
       setProfile(prof ?? null);
-      setIsAdmin((roles ?? []).some((r) => r.role === "super_admin"));
+      setIsAdmin(admin);
       setProfileLoaded(true);
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify({ profile: prof ?? null, isAdmin: admin }));
+      } catch {
+        // ignore
+      }
     })();
     return () => {
       active = false;
