@@ -253,9 +253,6 @@ export function StudentResources({
                     >
                       <div>
                         <div className="text-sm font-semibold text-foreground">{r.title}</div>
-                        <div className="mt-1 text-xs text-muted-foreground">
-                          {r.mime_type === "application/pdf" ? "PDF" : "صورة"}
-                        </div>
                       </div>
                       <div className="flex gap-2">
                         <button type="button" className="btn-text" onClick={() => open(r, false)}>
