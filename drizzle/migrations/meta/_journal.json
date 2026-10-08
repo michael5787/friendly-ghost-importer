@@ -65,11 +65,18 @@
       "tag": "0008_homework_status",
       "breakpoints": true
     },
-     {
+    {
       "idx": 9,
       "version": "7",
       "when": 1791351124835,
       "tag": "0009_lesson_logs",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791487102812,
+      "tag": "0010_school_settings",
       "breakpoints": true
     }
   ]
