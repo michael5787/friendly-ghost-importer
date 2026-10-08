@@ -8,4 +8,4 @@
 - [x] Demo page at / with in-memory data so behaviour is verifiable without a backend
 - [ ] Upload avatar élève (حسابي)
 - [ ] Afficher avatars partout (listes, Q/R)
-- [ ] Agrandir le nom de l'enseignant et le code de la classe dans le PDF de la مذكرة
+- [x] Agrandir le nom de l'enseignant et le code de la classe dans le PDF de la مذكرة
