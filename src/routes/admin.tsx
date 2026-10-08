@@ -96,10 +96,24 @@ function AdminDashboard({
   return (
     <div className="min-h-screen bg-canvas">
       <header className="app-bar">
-        <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-          <Wordmark space="admin" />
+        <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3">
+          <div className="min-w-0 shrink-0">
+            <Wordmark space="admin" />
+          </div>
 
-          <nav className="nav-menu order-3 w-full min-w-0 max-w-full justify-start sm:order-none sm:w-auto sm:justify-center" aria-label="القائمة">
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="user-chip min-w-0 max-w-[40vw] sm:max-w-[16rem]" title={email}>
+              <span className="user-avatar" aria-hidden="true">
+                <UserRound size={18} />
+              </span>
+              <span className="truncate text-sm font-semibold text-foreground">{name}</span>
+            </div>
+            <button type="button" onClick={signOut} className="btn-text shrink-0 whitespace-nowrap">
+              تسجيل الخروج
+            </button>
+          </div>
+
+          <nav className="nav-menu w-full min-w-0 max-w-full justify-start sm:justify-center" aria-label="القائمة">
             {TABS.map((t) => (
               <button
                 key={t.key}
@@ -112,18 +126,6 @@ function AdminDashboard({
               </button>
             ))}
           </nav>
-
-          <div className="flex items-center gap-3">
-            <div className="user-chip" title={email}>
-              <span className="user-avatar" aria-hidden="true">
-                <UserRound size={18} />
-              </span>
-              <span className="text-sm font-semibold text-foreground">{name}</span>
-            </div>
-            <button type="button" onClick={signOut} className="btn-text">
-              تسجيل الخروج
-            </button>
-          </div>
         </div>
       </header>
 
@@ -253,4 +255,3 @@ function AccountsPanel({ client }: { client: SupabaseClient<Database> }) {
     </section>
   );
 }
-
