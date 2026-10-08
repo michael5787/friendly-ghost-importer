@@ -167,6 +167,25 @@ export function LessonLogPdfButton({
         await (iframe.contentWindow as Window & { document: Document }).document.fonts.ready;
         await new Promise((r) => setTimeout(r, 400));
 
+        // html2canvas draws the iframe content using the *main* document's fonts:
+        // load the Arabic fonts here too, otherwise Arabic falls back and breaks.
+        if (!document.getElementById("lesson-pdf-fonts")) {
+          const link = document.createElement("link");
+          link.id = "lesson-pdf-fonts";
+          link.rel = "stylesheet";
+          link.href =
+            "https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700&display=swap";
+          document.head.appendChild(link);
+        }
+        await Promise.all([
+          document.fonts.load('400 16px "Cairo"'),
+          document.fonts.load('600 16px "Cairo"'),
+          document.fonts.load('700 16px "Cairo"'),
+          document.fonts.load('400 16px "Amiri"'),
+          document.fonts.load('700 16px "Amiri"'),
+        ]);
+        await document.fonts.ready;
+
         const [{ default: html2canvas }, { jsPDF }] = await Promise.all([import("html2canvas"), import("jspdf")]);
         const canvas = await html2canvas(doc.body, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
         const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
