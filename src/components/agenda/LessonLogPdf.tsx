@@ -63,7 +63,9 @@ function buildHtml(
     background: linear-gradient(135deg, #14532d 0%, #1f7a4a 60%, #c9a227 140%); position: relative; overflow: hidden; }
   header h1 { font-family: Amiri, serif; font-size: 28pt; margin: 0 0 4px; }
   header p { margin: 0 0 3px; opacity: .92; font-size: 11pt; }
-  header .meta { font-weight: 600; }
+  header .teacher { font-family: Amiri, serif; font-size: 21pt; font-weight: 700; opacity: 1; margin: 12px 0 8px; line-height: 1.35; }
+  header .teacher span { display: block; font-family: Cairo, sans-serif; font-size: 11pt; font-weight: 600; opacity: .85; margin-bottom: 2px; }
+  header .classes { font-size: 15pt; font-weight: 700; opacity: 1; margin-top: 8px; }
   .stats { display: flex; gap: 10px; margin: 14px 0 18px; }
   .stat { flex: 1; border: 1px solid #e3e8e4; border-radius: 10px; padding: 10px 14px; background: #f7faf8; }
   .stat b { display: block; font-size: 16pt; color: #14532d; }
@@ -77,7 +79,7 @@ function buildHtml(
     color: #14532d; padding: 8px 4px; direction: ltr; }
   .time b { display: block; font-size: 12pt; } .time span { font-size: 9pt; }
   .body { flex: 1; border: 1px solid #e3e8e4; border-right: 4px solid #1f7a4a; border-radius: 8px; padding: 8px 12px; }
-  .tag { font-size: 8.5pt; font-weight: 700; background: #fbf4dc; color: #8a6d12; padding: 2px 10px; border-radius: 99px; }
+  .tag { font-size: 15pt; font-weight: 700; background: #fbf4dc; color: #8a6d12; padding: 6px 20px; border-radius: 99px; }
   .body p { margin: 6px 0 0; white-space: pre-wrap; line-height: 1.7; }
   .empty { text-align: center; color: #6b7a71; padding: 40px; }
   footer { margin-top: 24px; display: flex; justify-content: space-between; font-size: 9pt; color: #6b7a71;
@@ -87,9 +89,9 @@ function buildHtml(
 </style></head><body>
 <header>
   <h1>دفتر الدروس</h1>
-  ${teacherName ? `<p class="meta">الأستاذ(ة): ${esc(teacherName)}</p>` : ""}
+  ${teacherName ? `<p class="teacher"><span>الأستاذ(ة)</span>${esc(teacherName)}</p>` : ""}
   ${levelNames.length ? `<p>المستويات: ${esc(levelNames.join("، "))}</p>` : ""}
-  ${usedClassNames.length ? `<p>الأقسام: ${esc(usedClassNames.join("، "))}</p>` : ""}
+  ${usedClassNames.length ? `<p class="classes">الأقسام: ${esc(usedClassNames.join("، "))}</p>` : ""}
   <p>الفترة: من ${esc(fmtDay(from))} إلى ${esc(fmtDay(to))}</p>
 </header>
 <div class="stats">
