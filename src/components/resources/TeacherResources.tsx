@@ -54,7 +54,6 @@ export function TeacherResources({
     setError(null);
 
     if (editing) {
-      if (editing) {
       let fileFields: { file_path: string; file_name: string; mime_type: string; file_size: number } | null = null;
       if (file) {
         if (!isAccepted(file)) {
@@ -85,7 +84,7 @@ export function TeacherResources({
           ...(fileFields ?? {}),
         })
         .eq("id", editing.id);
-       if (err) {
+      if (err) {
         if (fileFields) await client.storage.from("resources").remove([fileFields.file_path]);
         setError("تعذّر حفظ التعديل.");
       } else {
@@ -228,21 +227,20 @@ export function TeacherResources({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
-         <label className="sm:col-span-2 flex flex-col gap-1">
+        <label className="sm:col-span-2 flex flex-col gap-1">
           {editing ? (
             <span className="text-xs text-muted-foreground">
               الملف الحالي: {editing.file_name} — اختر ملفاً جديداً لاستبداله (اختياري)
             </span>
           ) : null}
           <input
-            className="field-input sm:col-span-2"
             key={editing?.id ?? "new"}
             className="field-input"
             type="file"
             accept={ACCEPTED}
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           />
-         </label>
+        </label>
         <div className="flex gap-2">
           <button type="submit" className="btn-primary" disabled={busy}>
             {busy ? "…" : editing ? "حفظ" : "رفع"}
