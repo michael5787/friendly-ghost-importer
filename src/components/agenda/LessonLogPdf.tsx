@@ -148,7 +148,7 @@ export function LessonLogPdfButton({
         query,
         client.from("profiles").select("full_name").eq("id", teacherId).maybeSingle(),
         client.from("levels").select("id, name"),
-        client.from("school_settings").select("name").maybeSingle(),
+        (client as any).from("school_settings").select("name").maybeSingle(),
       ]);
       if (logsRes.error) return setError("تعذّر تحميل الحصص.");
       const rows = logsRes.data ?? [];
