@@ -79,7 +79,7 @@ function buildHtml(
     color: #14532d; padding: 8px 4px; direction: ltr; }
   .time b { display: block; font-size: 12pt; } .time span { font-size: 9pt; }
   .body { flex: 1; border: 1px solid #e3e8e4; border-right: 4px solid #1f7a4a; border-radius: 8px; padding: 8px 12px; }
-  .tag { font-size: 13pt; font-weight: 700; background: #fbf4dc; color: #8a6d12; padding: 5px 18px; border-radius: 99px; }
+  .tag { font-size: 15pt; font-weight: 700; background: #fbf4dc; color: #8a6d12; padding: 6px 20px; border-radius: 99px; }
   .body p { margin: 6px 0 0; white-space: pre-wrap; line-height: 1.7; }
   .empty { text-align: center; color: #6b7a71; padding: 40px; }
   footer { margin-top: 24px; display: flex; justify-content: space-between; font-size: 9pt; color: #6b7a71;
