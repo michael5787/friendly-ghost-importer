@@ -5,6 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { SpaceAuth, Wordmark } from "@/components/SpaceAuth";
 import { LevelsPanel } from "@/components/admin/LevelsPanel";
 import { ChaptersPanel } from "@/components/admin/ChaptersPanel";
+import { SchoolPanel } from "@/components/admin/SchoolPanel";
 import { ClassesPanel } from "@/components/admin/ClassesPanel";
 import { UsersPanel } from "@/components/admin/UsersPanel";
 import type { Database } from "@/integrations/supabase/types";
@@ -14,7 +15,7 @@ import { useSpaceSection } from "@/hooks/useSpaceSection";
 
 
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
-type Tab = "accounts" | "users" | "levels" | "chapters" | "classes";
+type Tab = "accounts" | "users" | "levels" | "chapters" | "classes" | "school";
 
 const TABS: { key: Tab; label: string }[] = [
   { key: "accounts", label: "المصادقة" },
@@ -22,6 +23,7 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "levels", label: "المستويات" },
   { key: "chapters", label: "البرنامج" },
   { key: "classes", label: "الأقسام" },
+  { key: "school", label: "المؤسسة" },
 ];
 
 
@@ -131,6 +133,7 @@ function AdminDashboard({
         {tab === "levels" ? <LevelsPanel client={client} /> : null}
         {tab === "chapters" ? <ChaptersPanel client={client} /> : null}
         {tab === "classes" ? <ClassesPanel client={client} /> : null}
+        {tab === "school" ? <SchoolPanel client={client} /> : null}
       </main>
     </div>
   );
