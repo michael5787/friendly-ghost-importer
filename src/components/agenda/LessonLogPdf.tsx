@@ -166,6 +166,7 @@ export function LessonLogPdfButton({
         doc.close();
         await (iframe.contentWindow as Window & { document: Document }).document.fonts.ready;
         await new Promise((r) => setTimeout(r, 400));
+        iframe.style.height = `${doc.body.scrollHeight}px`;
 
         // html2canvas draws the iframe content using the *main* document's fonts:
         // load the Arabic fonts here too, otherwise Arabic falls back and breaks.
