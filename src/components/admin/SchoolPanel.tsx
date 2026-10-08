@@ -10,11 +10,11 @@ export function SchoolPanel({ client }: { client: SupabaseClient<Database> }) {
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   useEffect(() => {
-    void client
+    void (client as any)
       .from("school_settings")
       .select("*")
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data }: { data: any }) => {
         if (data) {
           setName(data.name);
           setAddress(data.address);
@@ -26,7 +26,7 @@ export function SchoolPanel({ client }: { client: SupabaseClient<Database> }) {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
-    const { error } = await client
+    const { error } = await (client as any)
       .from("school_settings")
       .upsert({ id: true, name: name.trim(), address: address.trim(), phone: phone.trim() });
     setMsg(error ? { ok: false, text: "تعذّر حفظ المعلومات." } : { ok: true, text: "تم الحفظ." });
