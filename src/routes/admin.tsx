@@ -99,7 +99,7 @@ function AdminDashboard({
         <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
           <Wordmark space="admin" />
 
-          <nav className="nav-menu order-3 w-full min-w-0 max-w-full justify-start lg:order-none lg:w-auto lg:justify-center" aria-label="القائمة">
+          <nav className="nav-menu order-3 w-full min-w-0 max-w-full justify-start sm:order-none sm:w-auto sm:justify-center" aria-label="القائمة">
             {TABS.map((t) => (
               <button
                 key={t.key}
