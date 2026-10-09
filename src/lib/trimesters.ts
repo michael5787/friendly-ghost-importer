@@ -12,7 +12,7 @@ export function trimesterOf(dateKey: string): "1" | "2" | "3" {
 }
 
 export const TRIMESTER_OPTIONS = [
-  { value: "1", label: "الثلاثي الأول (سبتمبر–ديسمبر)" },
-  { value: "2", label: "الثلاثي الثاني (جانفي–مارس)" },
-  { value: "3", label: "الثلاثي الثالث (أفريل–جوان)" },
+  { value: "1", label: "الثلاثي الأول" },
+  { value: "2", label: "الثلاثي الثاني" },
+  { value: "3", label: "الثلاثي الثالث" },
 ] as const;
