@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { formatDayLabel, type AgendaRow } from "@/components/agenda/useAgenda";
 import { applyAgendaFilter, type AgendaFilter } from "@/components/grades/AgendaFilters";
+import { trimesterOf } from "@/lib/trimesters";
 
 type Client = SupabaseClient<Database>;
 type ClassRow = Database["public"]["Tables"]["classes"]["Row"];
@@ -238,8 +239,12 @@ export function TeacherHomeworks({ client, classes, filter }: { client: Client; 
 
 /* ---------------- Student side ---------------- */
 
-export function StudentHomeworks({ client, classId, studentId }: { client: Client; classId: string | null; studentId: string }) {
-  const { rows, loading } = useHomeworks(client, classId ? [classId] : []);
+export function StudentHomeworks({ client, classId, studentId, trimester = "" }: { client: Client; classId: string | null; studentId: string; trimester?: string }) {
+  const { rows: allRows, loading } = useHomeworks(client, classId ? [classId] : []);
+  const rows = useMemo(
+    () => (trimester ? allRows.filter((r) => trimesterOf(r.event_date) === trimester) : allRows),
+    [allRows, trimester],
+  );
   const [status, setStatus] = useState<StatusRow[]>([]);
   useEffect(() => {
     client
