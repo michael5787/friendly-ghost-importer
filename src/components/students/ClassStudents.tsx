@@ -5,6 +5,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { STATUS_LABEL } from "@/lib/spaces";
 import { AddGradeButton } from "@/components/grades/Grades";
 import { HomeworkStatusButton } from "@/components/grades/Homework";
+import { AddAbsenceButton } from "@/components/absences/Absences";
 
 type ClassRow = Database["public"]["Tables"]["classes"]["Row"];
 
@@ -163,6 +164,7 @@ export function ClassStudents({
                     </span>
                     <AddGradeButton client={client} teacherId={teacherId} studentId={s.id} classId={s.class_id} />
                     <HomeworkStatusButton client={client} teacherId={teacherId} studentId={s.id} classId={s.class_id} />
+                    <AddAbsenceButton client={client} teacherId={teacherId} studentId={s.id} classId={s.class_id} />
                   </li>
                 ))}
               </ul>
