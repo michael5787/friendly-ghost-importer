@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import { shiftDay, toDateKey } from "./useAgenda";
 
-/** Mois en arabe (usage maghrébin). */
+/** Mois en arabe (usage algérien). */
 export const MONTHS_AR = [
   "جانفي",
   "فيفري",
@@ -156,10 +156,14 @@ export function AgendaCalendar({
           </div>
 
           {view === "days" ? (
-            <div className="mt-3 grid grid-cols-7 gap-1 text-center text-xs">
+            <div className="mt-3 grid grid-cols-7 gap-0.5 text-center text-xs sm:gap-1">
               {WEEKDAYS_AR.map((w) => (
-                <div key={w} className="py-1 text-muted-foreground">
-                  {w.slice(0, 3)}
+                <div
+                  key={w}
+                  title={w}
+                  className="min-w-0 overflow-hidden py-1 text-[10px] leading-tight text-muted-foreground"
+                >
+                  {w}
                 </div>
               ))}
               {cells.map((day, i) => {
