@@ -151,7 +151,7 @@ function TeacherShell({
           <div className="space-y-6">
             <AgendaFilterBar classes={classes} months={evalMonths} filter={evalFilter} onChange={setEvalFilter} />
             <TeacherEvaluations client={client} classes={classes} filter={evalFilter} />
-            <TeacherHomeworks client={client} classes={classes} />
+            <TeacherHomeworks client={client} classes={classes} filter={evalFilter} />
           </div>
         ) : tab === "questions" ? (
           <QuestionsSpace
