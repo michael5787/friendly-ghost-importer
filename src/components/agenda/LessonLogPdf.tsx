@@ -200,15 +200,41 @@ export function LessonLogPdfButton({
         const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
         const pageW = pdf.internal.pageSize.getWidth();
         const pageH = pdf.internal.pageSize.getHeight();
-        const imgH = (canvas.height * pageW) / canvas.width;
-        const pxPerMm = canvas.height / imgH;
+        // Measure each day after fonts have loaded, using the captured
+        // canvas scale rather than assuming a fixed pixel ratio.
+        const pxPerMm = canvas.width / pageW;
+        const maxSliceH = Math.floor(pageH * pxPerMm);
+        const bodyRect = doc.body.getBoundingClientRect();
+        if (bodyRect.width <= 0 || maxSliceH <= 0) {
+          throw new Error("PDF dimensions unavailable");
+        }
+        const canvasScale = canvas.width / bodyRect.width;
+        const dayRanges = Array.from(
+          doc.querySelectorAll<HTMLElement>(".day"),
+        ).map((day) => {
+          const rect = day.getBoundingClientRect();
+          return {
+            top: Math.max(0, Math.floor((rect.top - bodyRect.top) * canvasScale)),
+            bottom: Math.min(canvas.height, Math.ceil((rect.bottom - bodyRect.top) * canvasScale)),
+          };
+        });
+
         let rendered = 0;
         let page = 0;
         while (rendered < canvas.height) {
-          const sliceH = Math.min(canvas.height - rendered, pageH * pxPerMm);
+          let sliceEnd = Math.min(rendered + maxSliceH, canvas.height);
+
+          // Move a new day to the next page when its complete content
+          // does not fit. A day taller than one page must still be split.
+          const crossingDay = dayRanges.find(
+            (day) => day.top > rendered && day.top < sliceEnd && day.bottom > sliceEnd,
+          );
+          if (crossingDay) sliceEnd = crossingDay.top;
+
+          const sliceH = sliceEnd - rendered;
           const slice = document.createElement("canvas");
           slice.width = canvas.width;
-          slice.height = Math.ceil(sliceH);
+          slice.height = sliceH;
           const ctx = slice.getContext("2d");
           if (!ctx) throw new Error("PDF canvas unavailable");
           ctx.fillStyle = "#ffffff";
@@ -216,7 +242,7 @@ export function LessonLogPdfButton({
           ctx.drawImage(canvas, 0, rendered, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
           if (page > 0) pdf.addPage();
           pdf.addImage(slice.toDataURL("image/jpeg", 0.92), "JPEG", 0, 0, pageW, sliceH / pxPerMm);
-          rendered += sliceH;
+          rendered = sliceEnd;
           page += 1;
         }
         const clsName = classId ? `-${classes.find((c) => c.id === classId)?.name ?? ""}` : "";
