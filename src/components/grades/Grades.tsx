@@ -449,20 +449,22 @@ export function StudentGrades({ client, classId, studentId, trimester = "" }: { 
           </span>
         ) : null}
       </div>
-      {behaviorFirst ? (
-        <div className="resource-card mt-4 flex flex-wrap items-center justify-between gap-3 p-4">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-              <HeartHandshake size={16} /> السلوك
-            </div>
-            <div className="mt-0.5 text-xs text-muted-foreground">{BEHAVIOR_DESCRIPTION}</div>
-            {behaviorFirst.comment ? <div className="mt-1 text-xs text-foreground">{behaviorFirst.comment}</div> : null}
+      <div className="resource-card mt-4 flex flex-wrap items-center justify-between gap-3 p-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <HeartHandshake size={16} /> السلوك
           </div>
+          <div className="mt-0.5 text-xs text-muted-foreground">{BEHAVIOR_DESCRIPTION}</div>
+          {behaviorFirst?.comment ? <div className="mt-1 text-xs text-foreground">{behaviorFirst.comment}</div> : null}
+        </div>
+        {behaviorFirst ? (
           <span className="rounded-full bg-success/10 px-3 py-1 text-sm font-bold text-success">
             {fmt(behaviorFirst.grade)}/20
           </span>
-        </div>
-      ) : null}
+        ) : (
+          <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">لم يحدد بعد</span>
+        )}
+      </div>
       {!classId ? (
         <p className="mt-6 text-sm text-muted-foreground">لم يتم تعيينك إلى قسم بعد.</p>
       ) : loading ? (
