@@ -55,6 +55,8 @@ export function TeacherAgenda({
   const filter = { teacherId, ...(classId === "" ? {} : { classId }) };
   const { rows, loading, error, setError, reload } = useAgenda(client, filter, dateKey);
   const undated = useUndatedAgenda(client, filter);
+  // Filtre par trimestre, limité à la section « غير المبرمجة » ("" = tous).
+  const [undatedTri, setUndatedTri] = useState<string>("");
   const [version, setVersion] = useState(0);
   const counts = useAgendaCounts(client, filter, dateKey, version);
   const resources = useAttachedResources(client, rows);
@@ -378,13 +380,28 @@ export function TeacherAgenda({
               </button>
             ))}
           </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {(["", "1", "2", "3"] as const).map((tri) => (
+              <button
+                key={tri || "all"}
+                type="button"
+                className="btn-text text-xs"
+                data-active={undatedTri === tri}
+                onClick={() => setUndatedTri(tri)}
+              >
+                {tri === "" ? "كل الثلاثيات" : TRIMESTER_LABEL[tri]}
+              </button>
+            ))}
+          </div>
           {undated.loading ? (
             <p className="mt-3 text-sm text-muted-foreground">جارٍ التحميل…</p>
           ) : undated.rows.length === 0 ? (
             <p className="mt-3 text-sm text-muted-foreground">لا توجد عناصر غير مبرمجة.</p>
           ) : (
             <div className="mt-3 space-y-4">
-              {(["1", "2", "3"] as const).map((tri) => {
+              {(["1", "2", "3"] as const)
+                .filter((tri) => undatedTri === "" || tri === undatedTri)
+                .map((tri) => {
                 const triRows = undated.rows.filter((r) => r.trimester === tri);
                 if (triRows.length === 0) return null;
                 return (
