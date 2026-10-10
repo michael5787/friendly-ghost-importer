@@ -34,7 +34,9 @@ export function useAgendaCounts(
       const { data } = await query;
       if (!active) return;
       const next: Record<string, number> = {};
-      for (const row of data ?? []) next[row.event_date] = (next[row.event_date] ?? 0) + 1;
+      for (const row of data ?? []) {
+        if (row.event_date) next[row.event_date] = (next[row.event_date] ?? 0) + 1;
+      }
       setCounts(next);
     })();
     return () => {
@@ -169,4 +171,3 @@ export function AgendaCard({
     </article>
   );
 }
-
