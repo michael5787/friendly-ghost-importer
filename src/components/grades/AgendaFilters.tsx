@@ -10,11 +10,12 @@ type ClassRow = Database["public"]["Tables"]["classes"]["Row"];
 export type AgendaFilter = { classId: string; month: string; trimester: string };
 export const EMPTY_FILTER: AgendaFilter = { classId: "", month: "", trimester: "" };
 
-export function applyAgendaFilter<T extends { class_id: string; event_date: string }>(
+export function applyAgendaFilter<T extends { class_id: string; event_date: string | null }>(
   rows: T[],
   f: AgendaFilter,
 ): T[] {
   return rows.filter((r) => {
+    if (!r.event_date) return false; // éléments sans date : cachés des bilans
     if (f.classId && r.class_id !== f.classId) return false;
     if (f.month && r.event_date.slice(0, 7) !== f.month) return false;
     if (f.trimester && trimesterOf(r.event_date) !== f.trimester) return false;
@@ -38,7 +39,11 @@ export function useAgendaMonths(client: Client, classIds: string[]): string[] {
       .in("class_id", key.split(","))
       .then(({ data }) => {
         if (!active) return;
-        setMonths(Array.from(new Set((data ?? []).map((r) => r.event_date.slice(0, 7)))).sort().reverse());
+        setMonths(
+          Array.from(
+            new Set((data ?? []).flatMap((r) => (r.event_date ? [r.event_date.slice(0, 7)] : []))),
+          ).sort().reverse(),
+        );
       });
     return () => {
       active = false;
