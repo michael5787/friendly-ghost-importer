@@ -1,5 +1,6 @@
 export type GradeReportRow = {
   name: string;
+  cc?: number | null;
   first: number | null;
   second: number | null;
   exam: number | null;
@@ -11,6 +12,7 @@ export type GradeReport = {
   teacherName: string;
   className: string;
   trimesterName: string;
+  ccSeparate?: boolean;
   rows: GradeReportRow[];
 };
 
@@ -51,8 +53,8 @@ export async function downloadGradeReport(report: GradeReport) {
       <div class="details"><div><span>القسم:</span>${escapeHtml(report.className)}</div><div><span>الفترة:</span>${escapeHtml(report.trimesterName)}</div>
       <div><span>الأستاذ(ة):</span>${escapeHtml(report.teacherName)}</div></div></header>
       <p class="caption">عدد التلاميذ: ${report.rows.length.toLocaleString("ar-DZ")} · العلامات من ٢٠</p>
-      <table><thead><tr><th>التلميذ</th><th>الفرض الأول</th><th>الفرض الثاني</th><th>الامتحان</th><th>المعدل العام</th></tr></thead><tbody>
-      ${report.rows.map((row) => `<tr><td dir="auto">${escapeHtml(row.name)}</td>${[row.first, row.second, row.exam, row.general].map((grade) => `<td>${formatGrade(grade)}</td>`).join("")}</tr>`).join("")}
+      <table><thead><tr><th>التلميذ</th>${report.ccSeparate ? "<th>المراقبة المستمرة</th>" : ""}<th>الفرض الأول</th><th>الفرض الثاني</th><th>الامتحان</th><th>المعدل العام</th></tr></thead><tbody>
+      ${report.rows.map((row) => `<tr><td dir="auto">${escapeHtml(row.name)}</td>${[...(report.ccSeparate ? [row.cc ?? null] : []), row.first, row.second, row.exam, row.general].map((grade) => `<td>${formatGrade(grade)}</td>`).join("")}</tr>`).join("")}
       </tbody></table><footer><span>إمضاء الأستاذ(ة)</span><span class="page-number"></span></footer>
     </section></body></html>`;
 
