@@ -9,8 +9,24 @@ import { downloadGradeReport } from "@/components/grades/gradeReportPdf";
 type Client = SupabaseClient<Database>;
 type ClassRow = Database["public"]["Tables"]["classes"]["Row"];
 
-export type Coefs = { evals: number; behavior: number; homework: number; cc: number; devoir: number; exam: number };
-const DEFAULT_COEFS: Coefs = { evals: 1, behavior: 1, homework: 1, cc: 1, devoir: 1, exam: 2 };
+export type Coefs = { evals: number; behavior: number; homework: number; cc: number; d1: number; devoir: number; exam: number };
+const DEFAULT_COEFS: Coefs = { evals: 1, behavior: 1, homework: 1, cc: 1, d1: 0, devoir: 1, exam: 2 };
+
+/** Créneau d'une des 9 évaluations officielles (sans date à la création, liées à un trimestre). */
+export function officialSlot(title: string): "d1" | "d2" | "exam" {
+  const t = title.replace(/[إأآ]/g, "ا");
+  if (t.includes("امتحان") || t.includes("اختبار")) return "exam";
+  return t.includes("ثاني") ? "d2" : "d1";
+}
+
+/** D1 coef 0 → D1 remplace le contrôle continu ; sinon CC compte comme 4e épreuve. */
+export function generalAverage(p: { cc: number | null; d1: number | null; d2: number | null; exam: number | null }, c: Coefs) {
+  if (c.d1 === 0) {
+    const first = p.d1 ?? p.cc;
+    return { first, general: weighted([[first, c.cc], [p.d2, c.devoir], [p.exam, c.exam]]) };
+  }
+  return { first: p.d1, general: weighted([[p.d1, c.d1], [p.d2, c.devoir], [p.exam, c.exam], [p.cc, c.cc]]) };
+}
 
 /** Classe une évaluation selon son titre : الفرض → devoir, الامتحان → examen, sinon contrôle continu. */
 export function evalKind(title: string): "devoir" | "exam" | "cc" {
@@ -39,7 +55,7 @@ export function GradeSheet({ client, classes, teacherId, teacherName }: { client
   const [trimester, setTrimester] = useState("");
   const [coefs, setCoefs] = useState<Coefs>(DEFAULT_COEFS);
   const [students, setStudents] = useState<Student[]>([]);
-  const [events, setEvents] = useState<{ id: string; title: string; event_date: string | null; kind: string }[]>([]);
+  const [events, setEvents] = useState<{ id: string; title: string; event_date: string | null; kind: string; trimester: string | null }[]>([]);
   const [grades, setGrades] = useState<{ evaluation_id: string; student_id: string; grade: number }[]>([]);
   const [hw, setHw] = useState<{ homework_id: string; student_id: string; done: boolean }[]>([]);
   const [behavior, setBehavior] = useState<{ student_id: string; grade: number; created_at: string }[]>([]);
@@ -79,7 +95,7 @@ export function GradeSheet({ client, classes, teacherId, teacherName }: { client
       try {
       const [{ data: st, error: stError }, { data: ev, error: evError }] = await Promise.all([
         client.from("profiles").select("id, full_name, email").eq("space", "talameed").eq("class_id", classId).order("full_name"),
-        client.from("agenda_events").select("id, title, event_date, kind").eq("class_id", classId),
+        client.from("agenda_events").select("id, title, event_date, kind, trimester").eq("class_id", classId),
       ]);
       if (stError || evError) throw new Error("Grade data unavailable");
       const evIds = (ev ?? []).filter((e) => e.kind === "evaluation").map((e) => e.id);
@@ -113,25 +129,24 @@ export function GradeSheet({ client, classes, teacherId, teacherName }: { client
 
   const rows = useMemo(() => {
     const inT = (d: string) => !trimester || trimesterOf(d.slice(0, 10)) === trimester;
-    const evs = events.filter((e) => e.event_date && inT(e.event_date));
-    const evalById = new Map(evs.filter((e) => e.kind === "evaluation").map((e) => [e.id, e]));
+    const evs = events.filter((e) => !e.trimester && e.event_date && inT(e.event_date));
+    const ccEvalIds = new Set(evs.filter((e) => e.kind === "evaluation").map((e) => e.id));
+    const official = new Map(events.filter((e) => e.kind === "evaluation" && e.trimester && (!trimester || e.trimester === trimester)).map((e) => [e.id, officialSlot(e.title)]));
     const homeworks = evs.filter((e) => e.kind === "homework");
     return students.map((s) => {
-      const mine = grades.filter((g) => g.student_id === s.id && evalById.has(g.evaluation_id));
-      const by = (k: string) => mine.filter((g) => {
-        const event = evalById.get(g.evaluation_id);
-        return event ? evalKind(event.title) === k : false;
-      }).map((g) => Number(g.grade));
-      const evals = avg(by("cc"));
+      const mine = grades.filter((g) => g.student_id === s.id);
+      const slot = (k: string) => avg(mine.filter((g) => official.get(g.evaluation_id) === k).map((g) => Number(g.grade)));
+      const evals = avg(mine.filter((g) => ccEvalIds.has(g.evaluation_id)).map((g) => Number(g.grade)));
       const b = behavior.find((x) => x.student_id === s.id && inT(x.created_at));
       const beh = b ? Number(b.grade) : null;
       const done = homeworks.filter((h) => hw.some((x) => x.homework_id === h.id && x.student_id === s.id && x.done)).length;
       const home = homeworks.length ? (done / homeworks.length) * 20 : null;
       const cc = weighted([[evals, coefs.evals], [beh, coefs.behavior], [home, coefs.homework]]);
-      const devoir = avg(by("devoir"));
-      const exam = avg(by("exam"));
-      const general = weighted([[cc, coefs.cc], [devoir, coefs.devoir], [exam, coefs.exam]]);
-      return { s, evals, beh, home, cc, devoir, exam, general };
+      const d1 = slot("d1");
+      const devoir = slot("d2");
+      const exam = slot("exam");
+      const { first, general } = generalAverage({ cc, d1, d2: devoir, exam }, coefs);
+      return { s, evals, beh, home, cc, d1, first, devoir, exam, general };
     });
   }, [students, events, grades, hw, behavior, trimester, coefs]);
 
@@ -151,7 +166,8 @@ export function GradeSheet({ client, classes, teacherId, teacherName }: { client
         teacherName,
         className: selectedClass.name,
         trimesterName: TRIMESTER_OPTIONS.find((t) => t.value === trimester)?.label ?? "العام الدراسي",
-        rows: rows.map((r) => ({ name: r.s.full_name?.trim() || r.s.email, first: r.cc, second: r.devoir, exam: r.exam, general: r.general })),
+        ccSeparate: coefs.d1 !== 0,
+        rows: rows.map((r) => ({ name: r.s.full_name?.trim() || r.s.email, cc: r.cc, first: r.first, second: r.devoir, exam: r.exam, general: r.general })),
       });
     } catch {
       setExportError("تعذّر إنشاء ملف PDF. يرجى التحقق من الاتصال وإعادة المحاولة.");
@@ -174,7 +190,7 @@ export function GradeSheet({ client, classes, teacherId, teacherName }: { client
           <Table2 size={18} /> كشف النقاط
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          النقاط مأخوذة من التقييمات: كل تقييم يحتوي عنوانه على «فرض» يُحتسب في الفرض الثاني، و«امتحان» في الامتحان، والباقي في الفرض الأول.
+          الفرض الأول والفرض الثاني والامتحان مأخوذة من التقييمات التسع الرسمية لكل ثلاثي. إذا كان معامل الفرض الأول ٠، تُعتبر نقطته نقطة المراقبة المستمرة؛ وإلا تُحتسب المراقبة المستمرة كاختبار رابع حسب معاملها.
         </p>
       </div>
 
@@ -197,14 +213,15 @@ export function GradeSheet({ client, classes, teacherId, teacherName }: { client
       <div className="resource-card space-y-3 p-4">
         <div className="text-sm font-semibold text-foreground">المعاملات</div>
         <div className="flex flex-wrap gap-4">
-          <span className="text-xs font-semibold text-foreground">الفرض الأول:</span>
+          <span className="text-xs font-semibold text-foreground">المراقبة المستمرة:</span>
           {coefInput("evals", "التقييمات")}
           {coefInput("behavior", "السلوك")}
           {coefInput("homework", "الواجبات المنزلية")}
         </div>
         <div className="flex flex-wrap gap-4">
           <span className="text-xs font-semibold text-foreground">المعدل العام:</span>
-          {coefInput("cc", "الفرض الأول")}
+          {coefInput("cc", "المراقبة المستمرة")}
+          {coefInput("d1", "الفرض الأول")}
           {coefInput("devoir", "الفرض الثاني")}
           {coefInput("exam", "الامتحان")}
         </div>
@@ -220,7 +237,8 @@ export function GradeSheet({ client, classes, teacherId, teacherName }: { client
             <thead className="bg-muted/60 text-xs text-foreground">
               <tr>
                 <th className="p-3 text-start">التلميذ</th>
-                <th className="p-3">الفرض الأول</th>
+                {coefs.d1 !== 0 ? <th className="p-3">المراقبة المستمرة</th> : null}
+                <th className="p-3">{coefs.d1 === 0 ? "الفرض الأول / المراقبة المستمرة" : "الفرض الأول"}</th>
                 <th className="p-3">الفرض الثاني</th>
                 <th className="p-3">الامتحان</th>
                 <th className="p-3">المعدل العام</th>
@@ -231,8 +249,9 @@ export function GradeSheet({ client, classes, teacherId, teacherName }: { client
                 <tr key={r.s.id} className="border-t border-border">
                   <td className="p-3 font-semibold text-foreground">{r.s.full_name?.trim() || r.s.email}</td>
                   <td className="p-3 text-center" title={`التقييمات ${fmt(r.evals)} · السلوك ${fmt(r.beh)} · الواجبات ${fmt(r.home)}`}>
-                    {fmt(r.cc)}
+                    {fmt(coefs.d1 === 0 ? r.first : r.cc)}
                   </td>
+                  {coefs.d1 !== 0 ? <td className="p-3 text-center">{fmt(r.d1)}</td> : null}
                   <td className="p-3 text-center">{fmt(r.devoir)}</td>
                   <td className="p-3 text-center">{fmt(r.exam)}</td>
                   <td className="p-3 text-center font-bold text-primary">{fmt(r.general)}</td>
