@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Table2 } from "lucide-react";
+import { FileDown, Loader2, Table2 } from "lucide-react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { TRIMESTER_OPTIONS, trimesterOf } from "@/lib/trimesters";
+import { Button } from "@/components/ui/button";
+import { downloadGradeReport } from "@/components/grades/gradeReportPdf";
 
 type Client = SupabaseClient<Database>;
 type ClassRow = Database["public"]["Tables"]["classes"]["Row"];
@@ -32,7 +34,7 @@ const fmt = (n: number | null) => (n === null ? "—" : n.toLocaleString("ar-MA"
 
 type Student = { id: string; full_name: string | null; email: string };
 
-export function GradeSheet({ client, classes, teacherId }: { client: Client; classes: ClassRow[]; teacherId: string }) {
+export function GradeSheet({ client, classes, teacherId, teacherName }: { client: Client; classes: ClassRow[]; teacherId: string; teacherName: string }) {
   const [classId, setClassId] = useState("");
   const [trimester, setTrimester] = useState("");
   const [coefs, setCoefs] = useState<Coefs>(DEFAULT_COEFS);
@@ -41,7 +43,10 @@ export function GradeSheet({ client, classes, teacherId }: { client: Client; cla
   const [grades, setGrades] = useState<{ evaluation_id: string; student_id: string; grade: number }[]>([]);
   const [hw, setHw] = useState<{ homework_id: string; student_id: string; done: boolean }[]>([]);
   const [behavior, setBehavior] = useState<{ student_id: string; grade: number; created_at: string }[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!classId && classes[0]) setClassId(classes[0].id);
@@ -68,26 +73,38 @@ export function GradeSheet({ client, classes, teacherId }: { client: Client; cla
     if (!classId) return;
     let active = true;
     setLoading(true);
+    setLoadError(null);
+    setExportError(null);
     (async () => {
-      const [{ data: st }, { data: ev }] = await Promise.all([
+      try {
+      const [{ data: st, error: stError }, { data: ev, error: evError }] = await Promise.all([
         client.from("profiles").select("id, full_name, email").eq("space", "talameed").eq("class_id", classId).order("full_name"),
         client.from("agenda_events").select("id, title, event_date, kind").eq("class_id", classId),
       ]);
+      if (stError || evError) throw new Error("Grade data unavailable");
       const evIds = (ev ?? []).filter((e) => e.kind === "evaluation").map((e) => e.id);
       const hwIds = (ev ?? []).filter((e) => e.kind === "homework").map((e) => e.id);
       const [g, h, b] = await Promise.all([
-        evIds.length ? client.from("evaluation_grades").select("evaluation_id, student_id, grade").in("evaluation_id", evIds) : Promise.resolve({ data: [] }),
-        hwIds.length ? client.from("homework_status").select("homework_id, student_id, done").in("homework_id", hwIds) : Promise.resolve({ data: [] }),
+        evIds.length ? client.from("evaluation_grades").select("evaluation_id, student_id, grade").in("evaluation_id", evIds) : Promise.resolve({ data: [], error: null }),
+        hwIds.length ? client.from("homework_status").select("homework_id, student_id, done").in("homework_id", hwIds) : Promise.resolve({ data: [], error: null }),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (client as any).from("behavior_grades").select("student_id, grade, created_at").eq("class_id", classId).order("created_at", { ascending: false }),
       ]);
       if (!active) return;
+      if (g.error || h.error || b.error) throw new Error("Grade data unavailable");
       setStudents(st ?? []);
       setEvents(ev ?? []);
       setGrades((g.data ?? []) as typeof grades);
       setHw((h.data ?? []) as typeof hw);
       setBehavior((b.data ?? []) as typeof behavior);
       setLoading(false);
+      } catch {
+        if (active) {
+          setLoadError("تعذّر تحميل النقاط. يرجى إعادة المحاولة.");
+          setStudents([]);
+          setLoading(false);
+        }
+      }
     })();
     return () => {
       active = false;
@@ -101,7 +118,10 @@ export function GradeSheet({ client, classes, teacherId }: { client: Client; cla
     const homeworks = evs.filter((e) => e.kind === "homework");
     return students.map((s) => {
       const mine = grades.filter((g) => g.student_id === s.id && evalById.has(g.evaluation_id));
-      const by = (k: string) => mine.filter((g) => evalKind(evalById.get(g.evaluation_id)!.title) === k).map((g) => Number(g.grade));
+      const by = (k: string) => mine.filter((g) => {
+        const event = evalById.get(g.evaluation_id);
+        return event ? evalKind(event.title) === k : false;
+      }).map((g) => Number(g.grade));
       const evals = avg(by("cc"));
       const b = behavior.find((x) => x.student_id === s.id && inT(x.created_at));
       const beh = b ? Number(b.grade) : null;
@@ -114,6 +134,31 @@ export function GradeSheet({ client, classes, teacherId }: { client: Client; cla
       return { s, evals, beh, home, cc, devoir, exam, general };
     });
   }, [students, events, grades, hw, behavior, trimester, coefs]);
+
+  const exportPdf = async () => {
+    const selectedClass = classes.find((c) => c.id === classId);
+    if (!selectedClass || loading || loadError || !rows.length || exporting) return;
+    setExporting(true);
+    setExportError(null);
+    try {
+      const { data: school, error } = await (client as any).from("school_settings").select("name").maybeSingle();
+      if (error || !school?.name?.trim()) {
+        setExportError("يرجى حفظ اسم المؤسسة في فضاء الإدارة قبل تنزيل كشف النقاط.");
+        return;
+      }
+      await downloadGradeReport({
+        schoolName: school.name.trim(),
+        teacherName,
+        className: selectedClass.name,
+        trimesterName: TRIMESTER_OPTIONS.find((t) => t.value === trimester)?.label ?? "العام الدراسي",
+        rows: rows.map((r) => ({ name: r.s.full_name?.trim() || r.s.email, first: r.cc, second: r.devoir, exam: r.exam, general: r.general })),
+      });
+    } catch {
+      setExportError("تعذّر إنشاء ملف PDF. يرجى التحقق من الاتصال وإعادة المحاولة.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const coefInput = (k: keyof Coefs, label: string) => (
     <label className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -129,38 +174,43 @@ export function GradeSheet({ client, classes, teacherId }: { client: Client; cla
           <Table2 size={18} /> كشف النقاط
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          النقاط مأخوذة من التقييمات: كل تقييم يحتوي عنوانه على «فرض» يُحتسب في الفرض الثاني، و«امتحان» في الإمتحان، والباقي في المراقبة المستمرة.
+          النقاط مأخوذة من التقييمات: كل تقييم يحتوي عنوانه على «فرض» يُحتسب في الفرض الثاني، و«امتحان» في الامتحان، والباقي في الفرض الأول.
         </p>
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <select className="field-input text-sm" value={classId} onChange={(e) => setClassId(e.target.value)} aria-label="القسم">
+        <select className="field-input text-sm" disabled={exporting} value={classId} onChange={(e) => { setLoading(true); setClassId(e.target.value); }} aria-label="القسم">
           {classes.length === 0 ? <option value="">لا توجد أقسام</option> : null}
           {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
-        <select className="field-input text-sm" value={trimester} onChange={(e) => setTrimester(e.target.value)} aria-label="الثلاثي">
+        <select className="field-input text-sm" disabled={exporting} value={trimester} onChange={(e) => setTrimester(e.target.value)} aria-label="الثلاثي">
           <option value="">العام الدراسي</option>
           {TRIMESTER_OPTIONS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
         </select>
+        <Button type="button" variant="outline" onClick={() => void exportPdf()} disabled={loading || !!loadError || !classId || !rows.length || exporting}>
+          {exporting ? <Loader2 className="animate-spin motion-reduce:animate-none" /> : <FileDown />}
+          {exporting ? "جارٍ إنشاء PDF…" : "تنزيل كشف النقاط PDF"}
+        </Button>
       </div>
+      {exportError ? <p role="alert" className="text-sm text-destructive">{exportError}</p> : null}
 
       <div className="resource-card space-y-3 p-4">
         <div className="text-sm font-semibold text-foreground">المعاملات</div>
         <div className="flex flex-wrap gap-4">
-          <span className="text-xs font-semibold text-foreground">المراقبة المستمرة:</span>
+          <span className="text-xs font-semibold text-foreground">الفرض الأول:</span>
           {coefInput("evals", "التقييمات")}
           {coefInput("behavior", "السلوك")}
           {coefInput("homework", "الواجبات المنزلية")}
         </div>
         <div className="flex flex-wrap gap-4">
           <span className="text-xs font-semibold text-foreground">المعدل العام:</span>
-          {coefInput("cc", "المراقبة المستمرة")}
+          {coefInput("cc", "الفرض الأول")}
           {coefInput("devoir", "الفرض الثاني")}
-          {coefInput("exam", "الإمتحان")}
+          {coefInput("exam", "الامتحان")}
         </div>
       </div>
 
-      {loading ? (
+      {loadError ? <p role="alert" className="text-sm text-destructive">{loadError}</p> : loading && classId ? (
         <p className="text-sm text-muted-foreground">جارٍ التحميل…</p>
       ) : rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">لا يوجد تلاميذ في هذا القسم.</p>
@@ -170,9 +220,9 @@ export function GradeSheet({ client, classes, teacherId }: { client: Client; cla
             <thead className="bg-muted/60 text-xs text-foreground">
               <tr>
                 <th className="p-3 text-start">التلميذ</th>
-                <th className="p-3">المراقبة المستمرة</th>
+                <th className="p-3">الفرض الأول</th>
                 <th className="p-3">الفرض الثاني</th>
-                <th className="p-3">الإمتحان</th>
+                <th className="p-3">الامتحان</th>
                 <th className="p-3">المعدل العام</th>
               </tr>
             </thead>
