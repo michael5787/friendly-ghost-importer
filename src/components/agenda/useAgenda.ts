@@ -101,6 +101,61 @@ export function useAgenda(
   return { rows, loading, error, setError, reload: load };
 }
 
+/** Évaluations par défaut créées sans date pour chaque trimestre. */
+export const DEFAULT_EXAMS: { trimester: "1" | "2" | "3"; title: string }[] = [
+  { trimester: "1", title: "الفرض الأول" },
+  { trimester: "1", title: "الفرض الثاني" },
+  { trimester: "1", title: "الامتحان" },
+  { trimester: "2", title: "الفرض الأول" },
+  { trimester: "2", title: "الفرض الثاني" },
+  { trimester: "2", title: "الامتحان" },
+  { trimester: "3", title: "الفرض الأول" },
+  { trimester: "3", title: "الفرض الثاني" },
+  { trimester: "3", title: "الامتحان" },
+];
+
+export const TRIMESTER_LABEL: Record<string, string> = {
+  "1": "الثلاثي الأول",
+  "2": "الثلاثي الثاني",
+  "3": "الثلاثي الثالث",
+};
+
+/**
+ * Évaluations sans date (event_date NULL) : visibles uniquement côté
+ * enseignant, elles n'apparaissent aux élèves qu'une fois une date assignée.
+ */
+export function useUndatedAgenda(client: Client, filter: { classId?: string; teacherId?: string }) {
+  const [rows, setRows] = useState<AgendaRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { classId, teacherId } = filter;
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    let query = client
+      .from("agenda_events")
+      .select("*")
+      .is("event_date", null)
+      .order("trimester", { ascending: true })
+      .order("created_at", { ascending: true });
+    if (classId) query = query.eq("class_id", classId);
+    if (teacherId) query = query.eq("teacher_id", teacherId);
+    const { data, error: err } = await query;
+    if (err) {
+      console.error("[agenda] undated load failed", err);
+      setRows([]);
+    } else {
+      setRows(data ?? []);
+    }
+    setLoading(false);
+  }, [client, classId, teacherId]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  return { rows, loading, reload: load };
+}
+
 export type FirstPendingDayTarget =
   | { role: "student"; classId: string | null; studentId: string }
   | { role: "teacher"; teacherId: string; classId?: string };
