@@ -8,9 +8,12 @@ import { LessonLog } from "./LessonLog";
 import { AgendaCard, useAgendaCounts, useAttachedResources } from "./agendaShared";
 import {
   AGENDA_KIND_LABEL,
+  DEFAULT_EXAMS,
+  TRIMESTER_LABEL,
   toDateKey,
   useAgenda,
   useFirstPendingDay,
+  useUndatedAgenda,
   type AgendaKind,
   type AgendaRow,
 } from "./useAgenda";
@@ -49,6 +52,7 @@ export function TeacherAgenda({
   }, []);
   const filter = { teacherId, ...(classId === "" ? {} : { classId }) };
   const { rows, loading, error, setError, reload } = useAgenda(client, filter, dateKey);
+  const undated = useUndatedAgenda(client, filter);
   const [version, setVersion] = useState(0);
   const counts = useAgendaCounts(client, filter, dateKey, version);
   const resources = useAttachedResources(client, rows);
@@ -145,11 +149,47 @@ export function TeacherAgenda({
   };
 
 
+  /** Crée les 9 évaluations par défaut (3 par trimestre) sans date pour une classe. */
+  const createDefaults = async (targetClass: string) => {
+    setError(null);
+    setBusy(true);
+    const { error: err } = await client.from("agenda_events").insert(
+      DEFAULT_EXAMS.map((d) => ({
+        teacher_id: teacherId,
+        class_id: targetClass,
+        kind: "evaluation" as AgendaKind,
+        title: d.title,
+        trimester: d.trimester,
+        event_date: null,
+      })),
+    );
+    setBusy(false);
+    if (err) setError("تعذّر إنشاء الفروض والامتحانات الافتراضية.");
+    else await undated.reload();
+  };
+
+  /** Assigne la date actuellement sélectionnée → l'élément devient visible aux élèves. */
+  const assignDate = async (row: AgendaRow) => {
+    setError(null);
+    const { error: err } = await client
+      .from("agenda_events")
+      .update({ event_date: dateKey })
+      .eq("id", row.id);
+    if (err) setError("تعذّر تعيين التاريخ.");
+    else {
+      await undated.reload();
+      await refresh();
+    }
+  };
+
   const remove = async (row: AgendaRow) => {
     if (!window.confirm(`حذف «${row.title}»؟`)) return;
     const { error: err } = await client.from("agenda_events").delete().eq("id", row.id);
     if (err) setError("تعذّر الحذف.");
-    else await refresh();
+    else {
+      await undated.reload();
+      await refresh();
+    }
   };
 
   return (
@@ -166,6 +206,68 @@ export function TeacherAgenda({
 
       <div className="mt-4">
         <AgendaCalendar value={dateKey} onChange={navigate} counts={counts} />
+      </div>
+
+      {/* الفروض والامتحانات الافتراضية بدون تاريخ — مخفية عن التلاميذ حتى تعيين تاريخ */}
+      <div className="mt-4 rounded-2xl border border-border bg-card/95 p-4 shadow-sm">
+        <h3 className="text-sm font-semibold text-foreground">الفروض والامتحانات غير المبرمجة</h3>
+        <p className="mt-1 text-xs text-muted-foreground">
+          لا يراها التلاميذ. اختر اليوم المطلوب في المذكرة ثم اضغط «تعيين التاريخ» لبرمجة أي منها.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {classes.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              className="btn-text text-xs"
+              disabled={busy}
+              onClick={() => void createDefaults(c.id)}
+            >
+              إنشاء الافتراضية — {c.name}
+            </button>
+          ))}
+        </div>
+        {undated.loading ? (
+          <p className="mt-3 text-sm text-muted-foreground">جارٍ التحميل…</p>
+        ) : undated.rows.length === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground">لا توجد عناصر غير مبرمجة.</p>
+        ) : (
+          <div className="mt-3 space-y-4">
+            {(["1", "2", "3"] as const).map((tri) => {
+              const triRows = undated.rows.filter((r) => r.trimester === tri);
+              if (triRows.length === 0) return null;
+              return (
+                <div key={tri}>
+                  <h4 className="mb-2 text-xs font-semibold text-muted-foreground">{TRIMESTER_LABEL[tri]}</h4>
+                  <ul className="space-y-2">
+                    {triRows.map((row) => (
+                      <li
+                        key={row.id}
+                        className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card px-3 py-2 text-sm"
+                      >
+                        <span className="font-semibold text-foreground">{row.title}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {classes.find((c) => c.id === row.class_id)?.name ?? ""}
+                        </span>
+                        <span className="ms-auto flex gap-2">
+                          <button type="button" className="btn-text text-xs" onClick={() => void assignDate(row)}>
+                            تعيين التاريخ ({formatDayLabelAr(dateKey)})
+                          </button>
+                          <button type="button" className="btn-text text-xs" onClick={() => startEdit(row)}>
+                            تعديل
+                          </button>
+                          <button type="button" className="btn-text text-xs" onClick={() => void remove(row)}>
+                            حذف
+                          </button>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <LessonLog client={client} teacherId={teacherId} classes={classes} dateKey={dateKey} />
