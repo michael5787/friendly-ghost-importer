@@ -1,4 +1,6 @@
-import { CalendarPlus } from "lucide-react";
+import { CalendarPlus, ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
@@ -66,6 +68,7 @@ export function TeacherAgenda({
   const [linkUrl, setLinkUrl] = useState("");
   const [editing, setEditing] = useState<AgendaRow | null>(null);
   const [busy, setBusy] = useState(false);
+  const [showUndated, setShowUndated] = useState(false);
 
   const reset = () => {
     setEditing(null);
@@ -208,68 +211,6 @@ export function TeacherAgenda({
         <AgendaCalendar value={dateKey} onChange={navigate} counts={counts} />
       </div>
 
-      {/* الفروض والامتحانات الافتراضية بدون تاريخ — مخفية عن التلاميذ حتى تعيين تاريخ */}
-      <div className="mt-4 rounded-2xl border border-border bg-card/95 p-4 shadow-sm">
-        <h3 className="text-sm font-semibold text-foreground">الفروض والامتحانات غير المبرمجة</h3>
-        <p className="mt-1 text-xs text-muted-foreground">
-          لا يراها التلاميذ. اختر اليوم المطلوب في المذكرة ثم اضغط «تعيين التاريخ» لبرمجة أي منها.
-        </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {classes.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              className="btn-text text-xs"
-              disabled={busy}
-              onClick={() => void createDefaults(c.id)}
-            >
-              إنشاء الافتراضية — {c.name}
-            </button>
-          ))}
-        </div>
-        {undated.loading ? (
-          <p className="mt-3 text-sm text-muted-foreground">جارٍ التحميل…</p>
-        ) : undated.rows.length === 0 ? (
-          <p className="mt-3 text-sm text-muted-foreground">لا توجد عناصر غير مبرمجة.</p>
-        ) : (
-          <div className="mt-3 space-y-4">
-            {(["1", "2", "3"] as const).map((tri) => {
-              const triRows = undated.rows.filter((r) => r.trimester === tri);
-              if (triRows.length === 0) return null;
-              return (
-                <div key={tri}>
-                  <h4 className="mb-2 text-xs font-semibold text-muted-foreground">{TRIMESTER_LABEL[tri]}</h4>
-                  <ul className="space-y-2">
-                    {triRows.map((row) => (
-                      <li
-                        key={row.id}
-                        className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card px-3 py-2 text-sm"
-                      >
-                        <span className="font-semibold text-foreground">{row.title}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {classes.find((c) => c.id === row.class_id)?.name ?? ""}
-                        </span>
-                        <span className="ms-auto flex gap-2">
-                          <button type="button" className="btn-text text-xs" onClick={() => void assignDate(row)}>
-                            تعيين التاريخ ({formatDayLabelAr(dateKey)})
-                          </button>
-                          <button type="button" className="btn-text text-xs" onClick={() => startEdit(row)}>
-                            تعديل
-                          </button>
-                          <button type="button" className="btn-text text-xs" onClick={() => void remove(row)}>
-                            حذف
-                          </button>
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
       <LessonLog client={client} teacherId={teacherId} classes={classes} dateKey={dateKey} />
 
       <div className="mt-4">
@@ -371,6 +312,90 @@ export function TeacherAgenda({
           ))
         )}
       </div>
+      {/* الفروض والامتحانات الافتراضية بدون تاريخ — في أسفل الصفحة وقابلة للطي */}
+      <Collapsible
+        open={showUndated}
+        onOpenChange={setShowUndated}
+        className="mt-4 rounded-2xl border border-border bg-card/95 p-4 shadow-sm"
+      >
+        <h3>
+          <CollapsibleTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-auto w-full justify-between gap-3 whitespace-normal text-start"
+            >
+              <span className="min-w-0 text-sm font-semibold text-foreground">
+                الفروض والامتحانات غير المبرمجة
+              </span>
+              <ChevronDown
+                size={18}
+                aria-hidden="true"
+                className={`shrink-0 text-muted-foreground motion-safe:transition-transform ${showUndated ? "rotate-180" : ""}`}
+              />
+            </Button>
+          </CollapsibleTrigger>
+        </h3>
+        <CollapsibleContent>
+          <p className="mt-1 text-xs text-muted-foreground">
+            لا يراها التلاميذ. اختر اليوم المطلوب في المذكرة ثم اضغط «تعيين التاريخ» لبرمجة أي منها.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {classes.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                className="btn-text text-xs"
+                disabled={busy}
+                onClick={() => void createDefaults(c.id)}
+              >
+                إنشاء الافتراضية — {c.name}
+              </button>
+            ))}
+          </div>
+          {undated.loading ? (
+            <p className="mt-3 text-sm text-muted-foreground">جارٍ التحميل…</p>
+          ) : undated.rows.length === 0 ? (
+            <p className="mt-3 text-sm text-muted-foreground">لا توجد عناصر غير مبرمجة.</p>
+          ) : (
+            <div className="mt-3 space-y-4">
+              {(["1", "2", "3"] as const).map((tri) => {
+                const triRows = undated.rows.filter((r) => r.trimester === tri);
+                if (triRows.length === 0) return null;
+                return (
+                  <div key={tri}>
+                    <h4 className="mb-2 text-xs font-semibold text-muted-foreground">{TRIMESTER_LABEL[tri]}</h4>
+                    <ul className="space-y-2">
+                      {triRows.map((row) => (
+                        <li
+                          key={row.id}
+                          className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card px-3 py-2 text-sm"
+                        >
+                          <span className="font-semibold text-foreground">{row.title}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {classes.find((c) => c.id === row.class_id)?.name ?? ""}
+                          </span>
+                          <span className="ms-auto flex gap-2">
+                            <button type="button" className="btn-text text-xs" onClick={() => void assignDate(row)}>
+                              تعيين التاريخ ({formatDayLabelAr(dateKey)})
+                            </button>
+                            <button type="button" className="btn-text text-xs" onClick={() => startEdit(row)}>
+                              تعديل
+                            </button>
+                            <button type="button" className="btn-text text-xs" onClick={() => void remove(row)}>
+                              حذف
+                            </button>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CollapsibleContent>
+      </Collapsible>
     </section>
   );
 }
