@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ClipboardCheck, GraduationCap, Plus } from "lucide-react";
+import { ClipboardCheck, GraduationCap, HeartHandshake, Plus } from "lucide-react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { formatDayLabel, type AgendaRow } from "@/components/agenda/useAgenda";
@@ -9,6 +9,27 @@ import { trimesterOf } from "@/lib/trimesters";
 type Client = SupabaseClient<Database>;
 type ClassRow = Database["public"]["Tables"]["classes"]["Row"];
 export type GradeRow = Database["public"]["Tables"]["evaluation_grades"]["Row"];
+
+/** Note de comportement (السلوك) — table behavior_grades. */
+export type BehaviorRow = {
+  id: string;
+  student_id: string;
+  teacher_id: string;
+  class_id: string | null;
+  grade: number;
+  comment: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export const BEHAVIOR_DESCRIPTION = "الجدية في القسم و العناية بالكراريس";
+
+/** Accès non typé à behavior_grades (types régénérés après application de la migration). */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const behaviorTable = (client: Client) => (client as any).from("behavior_grades") as {
+  select: (cols?: string) => any;
+  upsert: (row: object, opts: object) => Promise<{ error: { message: string } | null }>;
+};
 
 const fmt = (n: number) => Number(n).toLocaleString("ar-MA", { maximumFractionDigits: 2 });
 
@@ -287,6 +308,109 @@ export function AddGradeButton(props: {
   );
 }
 
+/** Bouton enseignant : définir / modifier la note de comportement (السلوك) d'un élève. */
+export function BehaviorGradeButton({
+  client,
+  teacherId,
+  studentId,
+  classId,
+}: {
+  client: Client;
+  teacherId: string;
+  studentId: string;
+  classId: string | null;
+}) {
+  const [open, setOpen] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [existing, setExisting] = useState<BehaviorRow | null>(null);
+  const [grade, setGrade] = useState("");
+  const [comment, setComment] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    const { data } = await behaviorTable(client)
+      .select("*")
+      .eq("student_id", studentId)
+      .eq("teacher_id", teacherId)
+      .maybeSingle();
+    const row = (data ?? null) as BehaviorRow | null;
+    setExisting(row);
+    setGrade(row ? String(row.grade) : "");
+    setComment(row?.comment ?? "");
+  }, [client, studentId, teacherId]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const n = Number(grade.replace(",", "."));
+    if (!Number.isFinite(n) || n < 0 || n > 20) return setMsg("النقطة يجب أن تكون بين 0 و 20.");
+    setBusy(true);
+    setMsg(null);
+    const { error } = await behaviorTable(client).upsert(
+      {
+        student_id: studentId,
+        teacher_id: teacherId,
+        class_id: classId,
+        grade: n,
+        comment: comment.trim() || null,
+      },
+      { onConflict: "student_id,teacher_id" },
+    );
+    setBusy(false);
+    if (error) {
+      console.error("[behavior] save failed", error);
+      setMsg("تعذّر حفظ النقطة.");
+      return;
+    }
+    setSaved(true);
+    setOpen(false);
+    void load();
+  };
+
+  return (
+    <div className="w-full">
+      <button
+        type="button"
+        className="btn-text inline-flex items-center gap-1 text-xs"
+        onClick={() => {
+          setOpen((v) => !v);
+          setSaved(false);
+          setMsg(null);
+        }}
+      >
+        <HeartHandshake size={14} /> {open ? "إغلاق" : existing ? `السلوك: ${fmt(existing.grade)}/20` : "نقطة السلوك"}
+      </button>
+      {saved ? <span className="ms-2 text-xs text-success">تم حفظ نقطة السلوك.</span> : null}
+      {open ? (
+        <form onSubmit={save} className="mt-2 grid w-full gap-2 sm:grid-cols-[1fr_2fr_auto]">
+          <input
+            className="field-input text-sm"
+            inputMode="decimal"
+            placeholder="نقطة السلوك /20"
+            value={grade}
+            onChange={(e) => setGrade(e.target.value)}
+            aria-label="نقطة السلوك"
+          />
+          <input
+            className="field-input text-sm"
+            placeholder="ملاحظة (اختياري)"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+          />
+          <button type="submit" className="btn-primary text-sm" disabled={busy}>
+            {busy ? "…" : "حفظ"}
+          </button>
+          {msg ? <p className="text-xs text-destructive sm:col-span-3">{msg}</p> : null}
+        </form>
+      ) : null}
+    </div>
+  );
+}
+
 /* ------------------------------ Student side ------------------------------ */
 
 export function StudentGrades({ client, classId, studentId, trimester = "" }: { client: Client; classId: string | null; studentId: string; trimester?: string }) {
@@ -296,16 +420,22 @@ export function StudentGrades({ client, classId, studentId, trimester = "" }: { 
     [allRows, trimester],
   );
   const [grades, setGrades] = useState<GradeRow[]>([]);
+  const [behavior, setBehavior] = useState<BehaviorRow[]>([]);
   useEffect(() => {
     client
       .from("evaluation_grades")
       .select("*")
       .eq("student_id", studentId)
       .then(({ data }) => setGrades(data ?? []));
+    behaviorTable(client)
+      .select("*")
+      .eq("student_id", studentId)
+      .then(({ data }: { data: BehaviorRow[] | null }) => setBehavior(data ?? []));
   }, [client, studentId]);
 
   const graded = grades.filter((g) => rows.some((r) => r.id === g.evaluation_id));
   const avg = graded.length ? graded.reduce((s, g) => s + Number(g.grade), 0) / graded.length : null;
+  const behaviorFirst = behavior[0];
 
   return (
     <section className="text-start">
@@ -319,6 +449,20 @@ export function StudentGrades({ client, classId, studentId, trimester = "" }: { 
           </span>
         ) : null}
       </div>
+      {behaviorFirst ? (
+        <div className="resource-card mt-4 flex flex-wrap items-center justify-between gap-3 p-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <HeartHandshake size={16} /> السلوك
+            </div>
+            <div className="mt-0.5 text-xs text-muted-foreground">{BEHAVIOR_DESCRIPTION}</div>
+            {behaviorFirst.comment ? <div className="mt-1 text-xs text-foreground">{behaviorFirst.comment}</div> : null}
+          </div>
+          <span className="rounded-full bg-success/10 px-3 py-1 text-sm font-bold text-success">
+            {fmt(behaviorFirst.grade)}/20
+          </span>
+        </div>
+      ) : null}
       {!classId ? (
         <p className="mt-6 text-sm text-muted-foreground">لم يتم تعيينك إلى قسم بعد.</p>
       ) : loading ? (
