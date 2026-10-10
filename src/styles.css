@@ -157,6 +157,13 @@
 
 :root {
   --canvas: oklch(0.98 0.002 260);
+  --report-paper: oklch(1 0 0);
+  --report-ink: oklch(0.27 0.025 155);
+  --report-muted: oklch(0.5 0.025 155);
+  --report-accent: oklch(0.4 0.09 155);
+  --report-highlight: oklch(0.76 0.12 85);
+  --report-line: oklch(0.88 0.015 155);
+  --report-soft: oklch(0.97 0.01 155);
   --brand-blue: oklch(0.55 0.19 258);
   --brand-red: oklch(0.58 0.21 27);
   --brand-yellow: oklch(0.79 0.16 85);
@@ -175,6 +182,15 @@
 }
 
 @layer components {
+  .grade-report-frame {
+    position: fixed;
+    left: -10000px;
+    top: 0;
+    width: 794px;
+    height: 1123px;
+    border: 0;
+    pointer-events: none;
+  }
   .btn-primary {
     border-radius: 9999px;
     background-color: var(--color-primary);
