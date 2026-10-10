@@ -156,7 +156,7 @@ function TeacherShell({
             <TeacherHomeworks client={client} classes={classes} filter={evalFilter} />
           </div>
         ) : tab === "gradesheet" ? (
-          <GradeSheet client={client} classes={classes} teacherId={userId} />
+          <GradeSheet client={client} classes={classes} teacherId={userId} teacherName={name} />
         ) : tab === "questions" ? (
           <QuestionsSpace
             client={client}
