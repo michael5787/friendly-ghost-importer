@@ -78,6 +78,14 @@
       "when": 1791487102812,
       "tag": "0010_school_settings",
       "breakpoints": true
-    }
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791619552965,
+      "tag": "0013_agenda_undated_trimester_events",
+      "breakpoints": true
+    }    
+    
   ]
 }
