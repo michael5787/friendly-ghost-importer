@@ -39,7 +39,7 @@ export function GradeSheet({ client, classes, teacherId, teacherName }: { client
   const [trimester, setTrimester] = useState("");
   const [coefs, setCoefs] = useState<Coefs>(DEFAULT_COEFS);
   const [students, setStudents] = useState<Student[]>([]);
-  const [events, setEvents] = useState<{ id: string; title: string; event_date: string; kind: string }[]>([]);
+  const [events, setEvents] = useState<{ id: string; title: string; event_date: string | null; kind: string }[]>([]);
   const [grades, setGrades] = useState<{ evaluation_id: string; student_id: string; grade: number }[]>([]);
   const [hw, setHw] = useState<{ homework_id: string; student_id: string; done: boolean }[]>([]);
   const [behavior, setBehavior] = useState<{ student_id: string; grade: number; created_at: string }[]>([]);
@@ -113,7 +113,7 @@ export function GradeSheet({ client, classes, teacherId, teacherName }: { client
 
   const rows = useMemo(() => {
     const inT = (d: string) => !trimester || trimesterOf(d.slice(0, 10)) === trimester;
-    const evs = events.filter((e) => inT(e.event_date));
+    const evs = events.filter((e) => e.event_date && inT(e.event_date));
     const evalById = new Map(evs.filter((e) => e.kind === "evaluation").map((e) => [e.id, e]));
     const homeworks = evs.filter((e) => e.kind === "homework");
     return students.map((s) => {
