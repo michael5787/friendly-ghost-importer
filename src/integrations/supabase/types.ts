@@ -63,39 +63,42 @@ export type Database = {
           class_id: string
           created_at: string
           description: string | null
-          event_date: string
+          event_date: string | null
           id: string
           kind: Database["public"]["Enums"]["agenda_kind"]
           link_url: string | null
           resource_id: string | null
           teacher_id: string
           title: string
+          trimester: string | null 
           updated_at: string
         }
         Insert: {
           class_id: string
           created_at?: string
           description?: string | null
-          event_date: string
+          event_date?: string | null
           id?: string
           kind?: Database["public"]["Enums"]["agenda_kind"]
           link_url?: string | null
           resource_id?: string | null
           teacher_id: string
           title: string
+          trimester?: string | null
           updated_at?: string
         }
         Update: {
           class_id?: string
           created_at?: string
           description?: string | null
-          event_date?: string
+          event_date?: string | null
           id?: string
           kind?: Database["public"]["Enums"]["agenda_kind"]
           link_url?: string | null
           resource_id?: string | null
           teacher_id?: string
           title?: string
+          trimester?: string | null
           updated_at?: string
         }
         Relationships: [
