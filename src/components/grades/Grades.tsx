@@ -145,7 +145,7 @@ export function TeacherEvaluations({
                   <div>
                     <div className="text-sm font-semibold text-foreground">{r.title}</div>
                     <div className="mt-0.5 text-xs text-muted-foreground">
-                      {className(r.class_id)} — {formatDayLabel(r.event_date)}
+                      {className(r.class_id)} — {r.event_date ? formatDayLabel(r.event_date) : "بدون تاريخ"}
                     </div>
                   </div>
                   <div className="flex gap-2 text-xs">
@@ -416,7 +416,10 @@ export function BehaviorGradeButton({
 export function StudentGrades({ client, classId, studentId, trimester = "" }: { client: Client; classId: string | null; studentId: string; trimester?: string }) {
   const { rows: allRows, loading } = useEvaluations(client, classId ? [classId] : []);
   const rows = useMemo(
-    () => (trimester ? allRows.filter((r) => trimesterOf(r.event_date) === trimester) : allRows),
+    () =>
+      trimester
+        ? allRows.filter((r) => r.event_date && trimesterOf(r.event_date) === trimester)
+        : allRows.filter((r) => r.event_date),
     [allRows, trimester],
   );
   const [grades, setGrades] = useState<GradeRow[]>([]);
@@ -481,7 +484,9 @@ export function StudentGrades({ client, classId, studentId, trimester = "" }: { 
               <li key={r.id} className="resource-card flex flex-wrap items-center justify-between gap-3 p-4">
                 <div className="min-w-0">
                   <div className="text-sm font-semibold text-foreground">{r.title}</div>
-                  <div className="mt-0.5 text-xs text-muted-foreground">{formatDayLabel(r.event_date)}</div>
+                  <div className="mt-0.5 text-xs text-muted-foreground">
+                    {r.event_date ? formatDayLabel(r.event_date) : "بدون تاريخ"}
+                  </div>
                   {g?.comment ? <div className="mt-1 text-xs text-foreground">{g.comment}</div> : null}
                 </div>
                 {g ? (
