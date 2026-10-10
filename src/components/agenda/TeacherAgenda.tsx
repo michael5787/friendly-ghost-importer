@@ -69,6 +69,7 @@ export function TeacherAgenda({
   const [editing, setEditing] = useState<AgendaRow | null>(null);
   const [busy, setBusy] = useState(false);
   const [showUndated, setShowUndated] = useState(false);
+  const [showForm, setShowForm] = useState(false);
 
   const reset = () => {
     setEditing(null);
@@ -80,6 +81,7 @@ export function TeacherAgenda({
   };
 
   const startEdit = (row: AgendaRow) => {
+    setShowForm(true);
     setEditing(row);
     setKind(row.kind);
     setFormClassId(row.class_id);
@@ -224,61 +226,84 @@ export function TeacherAgenda({
         </select>
       </div>
 
-      <form onSubmit={submit} className="mt-4 grid gap-3 rounded-2xl border border-border bg-card/95 p-4 shadow-sm sm:grid-cols-2">
-        <p className="sm:col-span-2 text-sm font-semibold text-foreground">
-          {editing ? "تعديل عنصر" : "إضافة عنصر جديد"}
-        </p>
-        <select className="field-input" value={kind} onChange={(e) => setKind(e.target.value as AgendaKind)}>
-          <option value="homework">{AGENDA_KIND_LABEL.homework}</option>
-          <option value="evaluation">{AGENDA_KIND_LABEL.evaluation}</option>
-        </select>
-        <select className="field-input" value={formClassId} onChange={(e) => setFormClassId(e.target.value)}>
-          <option value="">اختر القسم</option>
-          {classes.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-        <input
-          className="field-input sm:col-span-2"
-          placeholder="العنوان"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <textarea
-          className="field-input sm:col-span-2"
-          rows={3}
-          placeholder="نص الواجب أو التقييم"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-        <select className="field-input" value={resourceId} onChange={(e) => setResourceId(e.target.value)}>
-          <option value="">بدون ملف مرفق</option>
-          {myResources.map((r) => (
-            <option key={r.id} value={r.id}>
-              {CATEGORY_LABEL[r.category]} — {r.title}
-            </option>
-          ))}
-        </select>
-        <input
-          className="field-input"
-          placeholder="رابط (اختياري)"
-          dir="ltr"
-          value={linkUrl}
-          onChange={(e) => setLinkUrl(e.target.value)}
-        />
-        <div className="flex gap-2 sm:col-span-2">
-          <button type="submit" className="btn-primary" disabled={busy}>
-            {editing ? "حفظ التعديل" : "إضافة إلى المذكرة"}
-          </button>
-          {editing ? (
-            <button type="button" className="btn-text" onClick={reset}>
-              إلغاء
-            </button>
-          ) : null}
-        </div>
-      </form>
+      <Collapsible
+        open={showForm}
+        onOpenChange={setShowForm}
+        className="mt-4 rounded-2xl border border-border bg-card/95 p-4 shadow-sm"
+      >
+        <h3>
+          <CollapsibleTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-auto w-full justify-between gap-3 whitespace-normal text-start"
+            >
+              <span className="min-w-0 text-sm font-semibold text-foreground">
+                {editing ? "تعديل عنصر" : "إضافة عنصر جديد"}
+              </span>
+              <ChevronDown
+                size={18}
+                aria-hidden="true"
+                className={`shrink-0 text-muted-foreground motion-safe:transition-transform ${showForm ? "rotate-180" : ""}`}
+              />
+            </Button>
+          </CollapsibleTrigger>
+        </h3>
+        <CollapsibleContent forceMount hidden={!showForm}>
+          <form onSubmit={submit} className="mt-3 grid gap-3 sm:grid-cols-2">
+            <select className="field-input" value={kind} onChange={(e) => setKind(e.target.value as AgendaKind)}>
+              <option value="homework">{AGENDA_KIND_LABEL.homework}</option>
+              <option value="evaluation">{AGENDA_KIND_LABEL.evaluation}</option>
+            </select>
+            <select className="field-input" value={formClassId} onChange={(e) => setFormClassId(e.target.value)}>
+              <option value="">اختر القسم</option>
+              {classes.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            <input
+              className="field-input sm:col-span-2"
+              placeholder="العنوان"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+            <textarea
+              className="field-input sm:col-span-2"
+              rows={3}
+              placeholder="نص الواجب أو التقييم"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+            <select className="field-input" value={resourceId} onChange={(e) => setResourceId(e.target.value)}>
+              <option value="">بدون ملف مرفق</option>
+              {myResources.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {CATEGORY_LABEL[r.category]} — {r.title}
+                </option>
+              ))}
+            </select>
+            <input
+              className="field-input"
+              placeholder="رابط (اختياري)"
+              dir="ltr"
+              value={linkUrl}
+              onChange={(e) => setLinkUrl(e.target.value)}
+            />
+            <div className="flex gap-2 sm:col-span-2">
+              <button type="submit" className="btn-primary" disabled={busy}>
+                {editing ? "حفظ التعديل" : "إضافة إلى المذكرة"}
+              </button>
+              {editing ? (
+                <button type="button" className="btn-text" onClick={reset}>
+                  إلغاء
+                </button>
+              ) : null}
+            </div>
+          </form>
+        </CollapsibleContent>
+      </Collapsible>
 
       {error ? <p className="mt-4 text-sm text-destructive">{error}</p> : null}
 
