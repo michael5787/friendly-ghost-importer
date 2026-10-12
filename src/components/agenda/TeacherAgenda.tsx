@@ -16,6 +16,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { CATEGORY_LABEL, useResourceList } from "@/components/resources/useResources";
 import { AgendaCalendar, formatDayLabelAr } from "./AgendaCalendar";
 import { LessonLog } from "./LessonLog";
+import { CourseFilesPanel } from "./CourseFilesPanel";
 import { AgendaCard, useAgendaCounts, useAttachedResources } from "./agendaShared";
 import {
   AGENDA_KIND_LABEL,
@@ -549,6 +550,7 @@ export function TeacherAgenda({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <CourseFilesPanel client={client} teacherId={teacherId} />
     </section>
   );
 }
