@@ -55,7 +55,7 @@ function buildHtml(
     )
     .join("");
   return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
-<title>المذكرة ${from} — ${to}</title>
+<title>دفتر النصوص ${from} — ${to}</title>
 <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -91,7 +91,7 @@ function buildHtml(
 </style></head><body>
 <header>
   ${schoolName ? `<p class="school">${esc(schoolName)}</p>` : ""}
-  <h1>المذكرة</h1>
+  <h1>دفتر النصوص</h1>
   ${teacherName ? `<p class="teacher"><span>الأستاذ(ة)</span>${esc(teacherName)}</p>` : ""}
   ${levelNames.length ? `<p>المستويات: ${esc(levelNames.join("، "))}</p>` : ""}
   ${usedClassNames.length ? `<p class="classes">الأقسام: ${esc(usedClassNames.join("، "))}</p>` : ""}
@@ -246,7 +246,7 @@ export function LessonLogPdfButton({
           page += 1;
         }
         const clsName = classId ? `-${classes.find((c) => c.id === classId)?.name ?? ""}` : "";
-        pdf.save(`المذكرة${clsName}-${from}_${to}.pdf`);
+        pdf.save(`دفتر النصوص${clsName}-${from}_${to}.pdf`);
       } finally {
         iframe.remove();
       }
