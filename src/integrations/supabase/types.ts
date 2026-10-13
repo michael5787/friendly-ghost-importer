@@ -237,7 +237,7 @@ export type Database = {
           comment: string | null
           created_at: string
           evaluation_id: string
-          grade: number
+          grade: number | null
           id: string
           student_id: string
           teacher_id: string
@@ -247,7 +247,7 @@ export type Database = {
           comment?: string | null
           created_at?: string
           evaluation_id: string
-          grade: number
+          grade?: number | null
           id?: string
           student_id: string
           teacher_id: string
@@ -257,7 +257,7 @@ export type Database = {
           comment?: string | null
           created_at?: string
           evaluation_id?: string
-          grade?: number
+          grade?: number | null
           id?: string
           student_id?: string
           teacher_id?: string
