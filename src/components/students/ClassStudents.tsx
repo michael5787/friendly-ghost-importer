@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { UsersRound } from "lucide-react";
+import { Search, UsersRound, X } from "lucide-react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { STATUS_LABEL } from "@/lib/spaces";
@@ -32,6 +32,7 @@ export function ClassStudents({
   const [students, setStudents] = useState<StudentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -68,10 +69,19 @@ export function ClassStudents({
 
   const className = (id: string | null) => classes.find((c) => c.id === id)?.name ?? null;
 
+  // Recherche par nom ou e-mail (insensible à la casse et aux espaces superflus).
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return students;
+    return students.filter(
+      (s) => (s.full_name ?? "").toLowerCase().includes(q) || s.email.toLowerCase().includes(q),
+    );
+  }, [students, search]);
+
   const groups = useMemo(() => {
     if (!selected) {
       const byClass = new Map<string, StudentRow[]>();
-      for (const s of students) {
+      for (const s of filtered) {
         const key = s.class_id ?? "";
         if (!byClass.has(key)) byClass.set(key, []);
         byClass.get(key)!.push(s);
@@ -80,9 +90,9 @@ export function ClassStudents({
         .map(([cid, rows]) => ({ label: className(cid) || "غير معيّن إلى قسم", rows }))
         .sort((a, b) => a.label.localeCompare(b.label, "ar"));
     }
-    return [{ label: className(selected) ?? "", rows: students }];
+    return [{ label: className(selected) ?? "", rows: filtered }];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [students, selected, classes]);
+  }, [filtered, selected, classes]);
 
   return (
     <section className="text-start">
@@ -96,11 +106,36 @@ export function ClassStudents({
           </p>
         </div>
         <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-          {students.length} تلميذ
+          {search.trim() ? `${filtered.length} / ${students.length}` : students.length} تلميذ
         </span>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+        <div className="relative min-w-56 flex-1">
+          <Search
+            size={16}
+            className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <input
+            type="search"
+            className="field-input w-full ps-9 pe-9 text-sm"
+            placeholder="ابحث بالاسم أو البريد الإلكتروني…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            aria-label="البحث عن تلميذ"
+          />
+          {search ? (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              className="absolute end-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:bg-muted"
+              aria-label="مسح البحث"
+            >
+              <X size={14} />
+            </button>
+          ) : null}
+        </div>
         <select
           className="field-input w-auto min-w-48 text-sm"
           value={selected ?? ""}
@@ -121,6 +156,11 @@ export function ClassStudents({
 
       {loading ? (
         <p className="mt-6 text-sm text-muted-foreground">جارٍ التحميل…</p>
+      ) : students.length > 0 && filtered.length === 0 ? (
+        <div className="mt-6 flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-card/60 px-6 py-12 text-center">
+          <Search size={32} className="text-muted-foreground" aria-hidden="true" />
+          <p className="text-sm text-muted-foreground">لا يوجد تلميذ يطابق «{search.trim()}».</p>
+        </div>
       ) : students.length === 0 ? (
         <div className="mt-6 flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-card/60 px-6 py-12 text-center">
           <UsersRound size={32} className="text-muted-foreground" aria-hidden="true" />
