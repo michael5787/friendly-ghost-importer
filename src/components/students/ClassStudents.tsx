@@ -58,8 +58,10 @@ export function ClassStudents({
       setFirstName("");
       setLastName("");
       setReloadKey((k) => k + 1);
-    } catch {
-      setAddMsg({ ok: false, text: "تعذّر إضافة التلميذ. تحقّق من أنك مُسنَد إلى هذا القسم." });
+    } catch (err) {
+      console.error("createPlaceholderStudent failed:", err);
+      const detail = err instanceof Error && err.message ? ` (${err.message})` : "";
+      setAddMsg({ ok: false, text: `تعذّر إضافة التلميذ. تحقّق من أنك مُسنَد إلى هذا القسم.${detail}` });
     }
     setAdding(false);
   };
