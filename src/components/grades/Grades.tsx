@@ -134,7 +134,8 @@ export function TeacherEvaluations({
         <ul className="mt-6 space-y-3">
           {filtered.map((r) => {
             const g = grades.filter((x) => x.evaluation_id === r.id);
-            const avg = g.length ? g.reduce((s, x) => s + Number(x.grade), 0) / g.length : null;
+            const scored = g.filter((x) => x.grade != null);
+            const avg = scored.length ? scored.reduce((s, x) => s + Number(x.grade), 0) / scored.length : null;
             return (
               <li key={r.id} className="resource-card p-4">
                 <button
@@ -167,7 +168,11 @@ export function TeacherEvaluations({
                       {g.map((x) => (
                         <li key={x.id} className="flex justify-between gap-3 py-2">
                           <span>{names[x.student_id] ?? "—"}</span>
-                          <span className="font-semibold">{fmt(x.grade)}/20</span>
+                          {x.grade != null ? (
+                            <span className="font-semibold">{fmt(x.grade)}/20</span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">لم يحدد بعد</span>
+                          )}
                         </li>
                       ))}
                     </ul>
@@ -200,6 +205,7 @@ export function GradeForm({
   const [existing, setExisting] = useState<GradeRow[]>([]);
   const [evalId, setEvalId] = useState("");
   const [grade, setGrade] = useState("");
+  const [undetermined, setUndetermined] = useState(false);
   const [comment, setComment] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -214,7 +220,8 @@ export function GradeForm({
 
   useEffect(() => {
     const g = existing.find((x) => x.evaluation_id === evalId);
-    setGrade(g ? String(g.grade) : "");
+    setGrade(g?.grade != null ? String(g.grade) : "");
+    setUndetermined(g ? g.grade == null : false);
     setComment(g?.comment ?? "");
   }, [evalId, existing]);
 
@@ -222,11 +229,11 @@ export function GradeForm({
     e.preventDefault();
     const n = Number(grade.replace(",", "."));
     if (!evalId) return setMsg("اختر التقييم.");
-    if (!Number.isFinite(n) || n < 0 || n > 20) return setMsg("النقطة يجب أن تكون بين 0 و 20.");
+    if (!undetermined && (!Number.isFinite(n) || n < 0 || n > 20)) return setMsg("النقطة يجب أن تكون بين 0 و 20.");
     setBusy(true);
     setMsg(null);
     const { error } = await client.from("evaluation_grades").upsert(
-      { evaluation_id: evalId, student_id: studentId, teacher_id: teacherId, grade: n, comment: comment.trim() || null },
+      { evaluation_id: evalId, student_id: studentId, teacher_id: teacherId, grade: undetermined ? null : n, comment: comment.trim() || null },
       { onConflict: "evaluation_id,student_id" },
     );
     setBusy(false);
@@ -250,14 +257,25 @@ export function GradeForm({
           </option>
         ))}
       </select>
-      <input
-        className="field-input text-sm"
-        inputMode="decimal"
-        placeholder="النقطة /20"
-        value={grade}
-        onChange={(e) => setGrade(e.target.value)}
-        aria-label="النقطة"
-      />
+      <div className="flex items-center gap-2">
+        <input
+          className="field-input text-sm"
+          inputMode="decimal"
+          placeholder="النقطة /20"
+          value={grade}
+          onChange={(e) => setGrade(e.target.value)}
+          aria-label="النقطة"
+          disabled={undetermined}
+        />
+        <label className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={undetermined}
+            onChange={(e) => setUndetermined(e.target.checked)}
+          />
+          غير محدد
+        </label>
+      </div>
       <input
         className="field-input text-sm"
         placeholder="ملاحظة (اختياري)"
@@ -482,9 +500,13 @@ export function StudentGrades({ client, classId, studentId, trimester = "" }: { 
                   {g?.comment ? <div className="mt-1 text-xs text-foreground">{g.comment}</div> : null}
                 </div>
                 {g ? (
-                  <span className="rounded-full bg-success/10 px-3 py-1 text-sm font-bold text-success">
-                    {fmt(g.grade)}/20
-                  </span>
+                  g.grade != null ? (
+                    <span className="rounded-full bg-success/10 px-3 py-1 text-sm font-bold text-success">
+                      {fmt(g.grade)}/20
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">لم يحدد بعد</span>
+                  )
                 ) : (
                   <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">لم تُسجَّل بعد</span>
                 )}
