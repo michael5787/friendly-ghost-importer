@@ -1,9 +1,11 @@
--- Cours complets par chapitre et niveau (PDF / Word), déposés par les enseignants.
+-- Migration 0014 (version autonome) : fichiers de cours par chapitre
+-- Ne dépend PAS de la table public.chapters : chapter_id est un simple uuid sans clé étrangère.
+
 CREATE TABLE IF NOT EXISTS public.course_files (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   teacher_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   level_id uuid NOT NULL REFERENCES public.levels(id) ON DELETE CASCADE,
-  chapter_id uuid REFERENCES public.chapters(id) ON DELETE SET NULL,
+  chapter_id uuid,
   title text NOT NULL,
   file_path text NOT NULL,
   file_name text NOT NULL,
@@ -30,11 +32,7 @@ DROP POLICY IF EXISTS "Owner or admin delete course files" ON public.course_file
 CREATE POLICY "Owner or admin delete course files" ON public.course_files
   FOR DELETE TO authenticated USING (teacher_id = auth.uid() OR public.has_role(auth.uid(), 'super_admin'));
 
--- Stockage privé : chaque enseignant écrit dans son dossier <uid>/...
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('course-files', 'course-files', false)
-ON CONFLICT (id) DO NOTHING;
-
+-- Règles de stockage pour le bucket privé "course-files"
 DROP POLICY IF EXISTS "Authenticated read course storage" ON storage.objects;
 CREATE POLICY "Authenticated read course storage" ON storage.objects
   FOR SELECT TO authenticated USING (bucket_id = 'course-files');
