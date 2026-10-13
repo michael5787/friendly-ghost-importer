@@ -436,22 +436,14 @@ export function StudentGrades({ client, classId, studentId, trimester = "" }: { 
       .then(({ data }: { data: BehaviorRow[] | null }) => setBehavior(data ?? []));
   }, [client, studentId]);
 
-  const graded = grades.filter((g) => rows.some((r) => r.id === g.evaluation_id));
-  const avg = graded.length ? graded.reduce((s, g) => s + Number(g.grade), 0) / graded.length : null;
   const behaviorFirst = behavior[0];
 
   return (
     <section className="text-start">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
-          <GraduationCap size={18} /> المراقبة المستمرة
-        </h2>
-        {avg !== null ? (
-          <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-            المعدل {fmt(avg)}/20
-          </span>
-        ) : null}
-      </div>
+      <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
+        <GraduationCap size={18} /> المراقبة المستمرة
+      </h2>
+
       <div className="resource-card mt-4 flex flex-wrap items-center justify-between gap-3 p-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
