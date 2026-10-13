@@ -134,7 +134,7 @@ export function GradeSheet({ client, classes, teacherId, teacherName }: { client
     const official = new Map(events.filter((e) => e.kind === "evaluation" && e.trimester && (!trimester || e.trimester === trimester)).map((e) => [e.id, officialSlot(e.title)]));
     const homeworks = evs.filter((e) => e.kind === "homework");
     return students.map((s) => {
-      const mine = grades.filter((g) => g.student_id === s.id);
+      const mine = grades.filter((g) => g.student_id === s.id && g.grade != null);
       const slot = (k: string) => avg(mine.filter((g) => official.get(g.evaluation_id) === k).map((g) => Number(g.grade)));
       const evals = avg(mine.filter((g) => ccEvalIds.has(g.evaluation_id)).map((g) => Number(g.grade)));
       const b = behavior.find((x) => x.student_id === s.id && inT(x.created_at));
