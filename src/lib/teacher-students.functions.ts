@@ -43,7 +43,8 @@ export const createPlaceholderStudent = createServerFn({ method: "POST" })
       _role: "super_admin",
     });
     const isTeacher = me?.space === "taleem" && me?.status === "approved";
-    if (!isTeacher && isAdmin !== true) throw new Error("Forbidden");
+    if (!isTeacher && isAdmin !== true)
+      throw new Error("حسابك ليس حساب أستاذ مُفعّل.");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -55,7 +56,7 @@ export const createPlaceholderStudent = createServerFn({ method: "POST" })
         .eq("teacher_id", context.userId)
         .eq("class_id", data.classId)
         .maybeSingle();
-      if (!link) throw new Error("Forbidden");
+      if (!link) throw new Error("أنت غير مُسنَد إلى هذا القسم.");
     }
     const { data: cls } = await supabaseAdmin
       .from("classes")
