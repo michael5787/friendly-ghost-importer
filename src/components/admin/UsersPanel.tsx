@@ -5,6 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { SPACE_LABEL, STATUS_LABEL, type SpaceKey } from "@/lib/spaces";
 import { setUserPassword, setUserEmail, confirmApprovedUserEmail } from "@/lib/admin-users.functions";
+import { isPlaceholderEmail } from "@/lib/teacher-students.functions";
 import { PasswordField } from "@/components/PasswordField";
 
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
@@ -195,6 +196,11 @@ export function UsersPanel({ client }: { client: SupabaseClient<Database> }) {
                         <span>{SPACE_LABEL[r.space as SpaceKey]}</span>
                         <span>•</span>
                         <span>{STATUS_LABEL[r.status]}</span>
+                        {isPlaceholderEmail(r.email) ? (
+                          <span className="rounded-full bg-primary/10 px-2 py-0.5 font-semibold text-primary">
+                            أنشأه الأستاذ — بريد مؤقت، يُرجى التحديث
+                          </span>
+                        ) : null}
                         {r.space === "talameed" ? (
                           <>
                             <span>•</span>
