@@ -96,7 +96,7 @@ export function CourseFilesPanel({
     const path = `${teacherId}/${upLevel}/${crypto.randomUUID()}.${ext}`;
     const { error: upErr } = await client.storage
       .from(BUCKET)
-      .upload(path, file, { contentType: file.type || undefined });
+      .upload(path, file, { contentType: file.type || "application/octet-stream" });
     if (upErr) {
       setError("تعذّر رفع الملف.");
       setBusy(false);
