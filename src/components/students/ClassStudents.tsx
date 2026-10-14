@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Search, UserPlus, UsersRound, X } from "lucide-react";
-import { useServerFn } from "@tanstack/react-start";
-import { createPlaceholderStudent, isPlaceholderEmail } from "@/lib/teacher-students.functions";
+import { isPlaceholderEmail } from "@/lib/teacher-students.functions";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { STATUS_LABEL } from "@/lib/spaces";
@@ -42,7 +41,6 @@ export function ClassStudents({
   const [addClassId, setAddClassId] = useState("");
   const [adding, setAdding] = useState(false);
   const [addMsg, setAddMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  const createStudentFn = useServerFn(createPlaceholderStudent);
 
   const addStudent = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,10 +49,14 @@ export function ClassStudents({
     setAdding(true);
     setAddMsg(null);
     try {
-      const res = await createStudentFn({
-        data: { firstName: firstName.trim(), lastName: lastName.trim(), classId: cid },
+      const { data: res, error: rpcErr } = await client.rpc("create_placeholder_student", {
+        _first_name: firstName.trim(),
+        _last_name: lastName.trim(),
+        _class_id: cid,
       });
-      setAddMsg({ ok: true, text: `تمت إضافة «${res.fullName}». الحساب في انتظار تحديث الإدارة.` });
+      if (rpcErr) throw new Error(rpcErr.message);
+      const fullName = (res as { fullName?: string } | null)?.fullName ?? "";
+      setAddMsg({ ok: true, text: `تمت إضافة «${fullName}». الحساب في انتظار تحديث الإدارة.` });
       setFirstName("");
       setLastName("");
       setReloadKey((k) => k + 1);
