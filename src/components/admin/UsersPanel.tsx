@@ -118,6 +118,11 @@ export function UsersPanel({ client }: { client: SupabaseClient<Database> }) {
 
   const levelName = (id: string | null) => levels.find((l) => l.id === id)?.name ?? "—";
   const className = (id: string | null) => classes.find((c) => c.id === id)?.name ?? "—";
+  const creatorName = (id: string | null) => {
+    if (!id) return null;
+    const creator = rows.find((r) => r.id === id);
+    return creator ? creator.full_name || creator.email : null;
+  };
   const teacherClassIdsOf = (teacherId: string) =>
     teacherClasses.filter((t) => t.teacher_id === teacherId).map((t) => t.class_id);
 
@@ -198,7 +203,9 @@ export function UsersPanel({ client }: { client: SupabaseClient<Database> }) {
                         <span>{STATUS_LABEL[r.status]}</span>
                         {isPlaceholderEmail(r.email) ? (
                           <span className="rounded-full bg-primary/10 px-2 py-0.5 font-semibold text-primary">
-                            أنشأه الأستاذ — بريد مؤقت، يُرجى التحديث
+                            {creatorName(r.created_by)
+                              ? `أنشأه الأستاذ: ${creatorName(r.created_by)}`
+                              : "أنشأه الأستاذ — بريد مؤقت، يُرجى التحديث"}
                           </span>
                         ) : null}
                         {r.space === "talameed" ? (
