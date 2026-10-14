@@ -208,6 +208,16 @@ export function UsersPanel({ client }: { client: SupabaseClient<Database> }) {
                               : "أنشأه الأستاذ — بريد مؤقت، يُرجى التحديث"}
                           </span>
                         ) : null}
+                        {isPlaceholderEmail(r.email) && r.created_at ? (
+                          <span className="rounded-full bg-muted px-2 py-0.5">
+                            أُنشئ في{" "}
+                            {new Date(r.created_at).toLocaleDateString("ar-DZ-u-nu-latn", {
+                              year: "numeric",
+                              month: "2-digit",
+                              day: "2-digit",
+                            })}
+                          </span>
+                        ) : null}
                         {r.space === "talameed" ? (
                           <>
                             <span>•</span>
