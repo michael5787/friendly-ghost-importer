@@ -314,6 +314,14 @@ export function ClassStudents({
                     <BehaviorGradeButton client={client} teacherId={teacherId} studentId={s.id} classId={s.class_id} />
                     <HomeworkStatusButton client={client} teacherId={teacherId} studentId={s.id} classId={s.class_id} />
                     <AddAbsenceButton client={client} teacherId={teacherId} studentId={s.id} classId={s.class_id} />
+                    {isPlaceholderEmail(s.email) ? (
+                      <PlaceholderStudentActions
+                        client={client}
+                        studentId={s.id}
+                        fullName={s.full_name ?? ""}
+                        onChanged={() => setReloadKey((k) => k + 1)}
+                      />
+                    ) : null}
                   </li>
                 ))}
               </ul>
@@ -322,5 +330,84 @@ export function ClassStudents({
         </div>
       )}
     </section>
+  );
+}
+
+/** Modifier le nom / supprimer un élève ajouté par l'enseignant (compte fictif uniquement). */
+function PlaceholderStudentActions({
+  client,
+  studentId,
+  fullName,
+  onChanged,
+}: {
+  client: SupabaseClient<Database>;
+  studentId: string;
+  fullName: string;
+  onChanged: () => void;
+}) {
+  const parts = fullName.trim().split(/\s+/);
+  const [open, setOpen] = useState(false);
+  const [lastName, setLastName] = useState(parts[0] ?? "");
+  const [firstName, setFirstName] = useState(parts.slice(1).join(" "));
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  const rename = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!firstName.trim() || !lastName.trim()) return setMsg("الاسم واللقب مطلوبان.");
+    setBusy(true);
+    setMsg(null);
+    const { error } = await client.rpc("rename_placeholder_student", {
+      _student_id: studentId,
+      _first_name: firstName.trim(),
+      _last_name: lastName.trim(),
+    });
+    setBusy(false);
+    if (error) return setMsg(`تعذّر التعديل. (${error.message})`);
+    setOpen(false);
+    onChanged();
+  };
+
+  const remove = async () => {
+    if (!window.confirm(`حذف التلميذ «${fullName}» من القائمة؟ ستُحذف أيضاً نقطه وغياباته.`)) return;
+    setBusy(true);
+    setMsg(null);
+    const { error } = await client.rpc("delete_placeholder_student", { _student_id: studentId });
+    setBusy(false);
+    if (error) return setMsg(`تعذّر الحذف. (${error.message})`);
+    onChanged();
+  };
+
+  return (
+    <div className="w-full">
+      <div className="flex flex-wrap gap-3">
+        <button type="button" className="btn-text text-xs" onClick={() => setOpen((v) => !v)} disabled={busy}>
+          {open ? "إغلاق" : "تعديل الاسم"}
+        </button>
+        <button type="button" className="btn-text text-xs text-destructive" onClick={() => void remove()} disabled={busy}>
+          حذف التلميذ
+        </button>
+      </div>
+      {open ? (
+        <form onSubmit={rename} className="mt-2 grid w-full gap-2 sm:grid-cols-[1fr_1fr_auto]">
+          <input
+            className="field-input text-sm"
+            placeholder="اللقب (النسب)"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+          />
+          <input
+            className="field-input text-sm"
+            placeholder="الاسم"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+          />
+          <button type="submit" className="btn-primary text-sm" disabled={busy}>
+            {busy ? "…" : "حفظ"}
+          </button>
+        </form>
+      ) : null}
+      {msg ? <p className="mt-1 text-xs text-destructive">{msg}</p> : null}
+    </div>
   );
 }
