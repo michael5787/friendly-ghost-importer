@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -70,7 +70,7 @@ export type Database = {
           resource_id: string | null
           teacher_id: string
           title: string
-          trimester: string | null 
+          trimester: string | null
           updated_at: string
         }
         Insert: {
@@ -228,6 +228,60 @@ export type Database = {
             columns: ["level_id"]
             isOneToOne: false
             referencedRelation: "levels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_files: {
+        Row: {
+          chapter_id: string | null
+          created_at: string
+          file_name: string
+          file_path: string
+          id: string
+          level_id: string
+          mime_type: string | null
+          size_bytes: number | null
+          teacher_id: string
+          title: string
+        }
+        Insert: {
+          chapter_id?: string | null
+          created_at?: string
+          file_name: string
+          file_path: string
+          id?: string
+          level_id: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          teacher_id: string
+          title: string
+        }
+        Update: {
+          chapter_id?: string | null
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          level_id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          teacher_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_files_level_id_fkey"
+            columns: ["level_id"]
+            isOneToOne: false
+            referencedRelation: "levels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_files_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
