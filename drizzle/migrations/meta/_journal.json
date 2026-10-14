@@ -5,7 +5,7 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1788282623848,
+      "when": 1788282624848,
       "tag": "0000_madaurous_full_schema",
       "breakpoints": true
     },
@@ -82,16 +82,58 @@
     {
       "idx": 11,
       "version": "7",
+      "when": 1791487103812,
+      "tag": "0011_create_absences",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791487104812,
+      "tag": "0012_behavior_grades",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
       "when": 1791619552965,
       "tag": "0013_agenda_undated_trimester_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791619553965,
+      "tag": "0014_course_files",
       "breakpoints": true
     },
     {
       "idx": 15,
       "version": "7",
       "when": 1791906906446,
-      "tag": "0015_evaluation_grades_nullable",
+      "tag": "0015_evaluation_grades_nullable_grade",
       "breakpoints": true
-    }    
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1791906907446,
+      "tag": "0016_create_placeholder_student",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791906908446,
+      "tag": "0017_edit_delete_placeholder_student",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791906909446,
+      "tag": "0018_profiles_created_by_teacher",
+      "breakpoints": true
+    }
   ]
 }
