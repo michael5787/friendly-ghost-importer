@@ -351,6 +351,28 @@ function PlaceholderStudentActions({
   const [firstName, setFirstName] = useState(parts.slice(1).join(" "));
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [activateOpen, setActivateOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const activate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) return setMsg("البريد الإلكتروني غير صالح.");
+    if (password.length < 6) return setMsg("كلمة المرور يجب أن تتكوّن من 6 أحرف على الأقل.");
+    if (!window.confirm(`تفعيل حساب «${fullName}» بالبريد ${email.trim()}؟ سيتمكّن التلميذ من الدخول بهذه المعلومات.`)) return;
+    setBusy(true);
+    setMsg(null);
+    const { error } = await client.rpc("activate_placeholder_student", {
+      _student_id: studentId,
+      _email: email.trim(),
+      _password: password,
+    });
+    setBusy(false);
+    if (error) return setMsg(`تعذّر التفعيل. (${error.message})`);
+    setActivateOpen(false);
+    setPassword("");
+    onChanged();
+  };
 
   const rename = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -381,8 +403,11 @@ function PlaceholderStudentActions({
   return (
     <div className="w-full">
       <div className="flex flex-wrap gap-3">
-        <button type="button" className="btn-text text-xs" onClick={() => setOpen((v) => !v)} disabled={busy}>
+        <button type="button" className="btn-text text-xs" onClick={() => { setOpen((v) => !v); setActivateOpen(false); }} disabled={busy}>
           {open ? "إغلاق" : "تعديل الاسم"}
+        </button>
+        <button type="button" className="btn-text text-xs text-success" onClick={() => { setActivateOpen((v) => !v); setOpen(false); }} disabled={busy}>
+          {activateOpen ? "إغلاق" : "تفعيل الحساب"}
         </button>
         <button type="button" className="btn-text text-xs text-destructive" onClick={() => void remove()} disabled={busy}>
           حذف التلميذ
@@ -405,6 +430,37 @@ function PlaceholderStudentActions({
           <button type="submit" className="btn-primary text-sm" disabled={busy}>
             {busy ? "…" : "حفظ"}
           </button>
+        </form>
+      ) : null}
+      {activateOpen ? (
+        <form onSubmit={activate} className="mt-2 grid w-full gap-2 sm:grid-cols-[1fr_1fr_auto]">
+          <input
+            type="email"
+            dir="ltr"
+            className="field-input text-sm"
+            placeholder="البريد الإلكتروني للتلميذ"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="off"
+          />
+          <input
+            type="text"
+            dir="ltr"
+            className="field-input text-sm"
+            placeholder="كلمة المرور (6 أحرف على الأقل)"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={6}
+            autoComplete="new-password"
+          />
+          <button type="submit" className="btn-primary text-sm" disabled={busy}>
+            {busy ? "…" : "تفعيل"}
+          </button>
+          <p className="text-xs text-muted-foreground sm:col-span-3">
+            بعد التفعيل يصبح الحساب «مقبولاً» ويمكن للتلميذ الدخول إلى فضاء التلاميذ بهذا البريد وكلمة المرور.
+          </p>
         </form>
       ) : null}
       {msg ? <p className="mt-1 text-xs text-destructive">{msg}</p> : null}
