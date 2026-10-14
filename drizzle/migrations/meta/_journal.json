@@ -134,6 +134,13 @@
       "when": 1791906909446,
       "tag": "0018_profiles_created_by_teacher",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791906910446,
+      "tag": "0019_activate_placeholder_student",
+      "breakpoints": true
     }
   ]
 }
