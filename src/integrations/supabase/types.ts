@@ -485,6 +485,7 @@ export type Database = {
           avatar_path: string | null
           class_id: string | null
           created_at: string
+          created_by: string | null
           email: string
           full_name: string | null
           id: string
@@ -498,6 +499,7 @@ export type Database = {
           avatar_path?: string | null
           class_id?: string | null
           created_at?: string
+          created_by?: string | null
           email: string
           full_name?: string | null
           id: string
@@ -511,6 +513,7 @@ export type Database = {
           avatar_path?: string | null
           class_id?: string | null
           created_at?: string
+          created_by?: string | null
           email?: string
           full_name?: string | null
           id?: string
@@ -528,6 +531,13 @@ export type Database = {
             referencedRelation: "classes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "profiles_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }, 
           {
             foreignKeyName: "profiles_level_id_fkey"
             columns: ["level_id"]
