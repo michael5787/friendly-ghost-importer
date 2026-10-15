@@ -165,7 +165,7 @@ export function TeacherAgenda({
         user_id: s.id,
         actor_id: teacherId,
         kind: "agenda",
-        title: `${AGENDA_KIND_LABEL[eventKind]} جديد في المفكرة`,
+        title: `${AGENDA_KIND_LABEL[eventKind]} جديد في المذكرة`,
         body: `«${eventTitle}» ${className ? `— ${className} ` : ""}ليوم ${formatDayLabelAr(dateKey)}`,
       })),
     );
