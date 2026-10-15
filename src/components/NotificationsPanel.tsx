@@ -47,7 +47,7 @@ export function NotificationsPanel({
               <div>
                 <div className="text-sm font-semibold text-foreground">
                   {n.read_at === null ? <span className="notif-dot" aria-hidden="true" /> : null}
-                  {n.title}
+                  {n.kind === "agenda" ? n.title.replace(/المفكرة/g, "المذكرة") : n.title}
                 </div>
                 {n.body ? <div className="mt-1 text-xs text-muted-foreground">{n.body}</div> : null}
                 <div className="mt-1 text-[11px] text-muted-foreground">{formatDate(n.created_at)}</div>
